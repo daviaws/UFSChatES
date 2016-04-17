@@ -1,4 +1,5 @@
 Classes = MinhaClasseFodona
 Variáveis = minhaVariavelFofinha
 Métodos = meu_metodo_maneiro
-
+Constante = MINHA_CONSTANTE
+Nome de arquivo = meu_arquivo.py

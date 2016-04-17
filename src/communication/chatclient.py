@@ -25,9 +25,9 @@ class Client():
                 print("Connection is sucessfull")
                 break
 
-    def send_message(self, msg):
+    def send_command(self, cmd):
         if self.connected:
-            self.connection.send_server(msg)
+            self.connection.send_server(cmd)
         else:
             print('Not connected to perform action')
 
