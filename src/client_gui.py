@@ -1,7 +1,7 @@
 from tkinter import *
 import asyncio
 from functools import wraps
-import chatclient
+from communication import chatclient
 
 def runloop(func):
     '''
