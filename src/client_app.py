@@ -2,6 +2,7 @@ from tkinter import *
 import asyncio
 from functools import wraps
 from communication import chatclient
+from communication.communication_protocol import Register
 
 APP_NAME = 'UFSChat'
 HEIGHTPIXELS = 600
@@ -67,7 +68,7 @@ class MyGui():
 
         buttonFrame = Frame(loginFrame, height=2, bd=1, relief=SUNKEN)
         buttonFrame.pack(fill=Y)
-        login = Button(buttonFrame, text='Login', command= lambda: self.raise_frame(self.testScreen, self.loginScreen))
+        login = Button(buttonFrame, text='Login', command= lambda: self.client.send_command(Register(username=userNameEntry.get(), passwd=userPasswdEntry.get())))
         login.pack()
 
         consoleFrame = Frame(mainFrame)
@@ -100,7 +101,8 @@ class MyGui():
         userNameEntry.pack()
 
         return mainFrame
-        
+    
+    #login = Button(buttonFrame, text='Login', command= lambda: self.raise_frame(self.testScreen, self.loginScreen))
     def raise_frame(self, frame, kill_frame=None):
         if kill_frame:
             self.kill_frame(kill_frame)
