@@ -14,7 +14,7 @@ class Command():
     def __init__(self, args=None):
         self.args = args
         self.date = None
-        self.keyargs = []
+        self.keyargs = set()
 
     def has_args(self):
         if self.args:
@@ -77,10 +77,11 @@ class Protocol():
                 datetime = decodedCommand['datetime']
                 if 'cmd' in decodedCommand:
                     if decodedCommand['cmd'] in self.REF_DICT:
+                        cmd = self.REF_DICT[decodedCommand['cmd']]
                         if 'params' in decodedCommand:
-                            cmd = self.REF_DICT[decodedCommand['cmd']](decodedCommand['params'])
+                            cmd = cmd(decodedCommand['params'])
                         else:
-                            cmd = self.REF_DICT[decodedCommand['cmd']]()
+                            cmd = cmd()
                         
                         if cmd.validate():
                             return (OK, cmd, datetime)
