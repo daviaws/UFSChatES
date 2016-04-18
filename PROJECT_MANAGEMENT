@@ -1,7 +1,7 @@
 TASKS
 
 Client App:
-BIND das mensagens do client com a caixa de texto do GUI.
+BIND dos eventos do modelo os elementos da GUI - Observador-Observado(?).
 Implementacao do protocolo de comandos do client.
 
 Server App:
