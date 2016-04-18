@@ -43,8 +43,6 @@ class Client():
 
 class ClientConnection(asyncio.Protocol):
 
-    master = None
-
     def __init__(self, master, loop):
         self.master = master
         self.loop = loop

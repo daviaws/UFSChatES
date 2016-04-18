@@ -2,7 +2,7 @@ TASKS
 
 Client App:
 BIND dos eventos do modelo os elementos da GUI - Observador-Observado(?).
-Implementacao do protocolo de comandos do client.
+Processamento de comandos
 
 Server App:
-Implementacao do protocolo de comandos do server.
+Processamento de comandos
