@@ -1,0 +1,8 @@
+TASKS
+
+Client App:
+BIND das mensagens do client com a caixa de texto do GUI.
+Implementacao do protocolo de comandos do client.
+
+Server App:
+Implementacao do protocolo de comandos do server.
