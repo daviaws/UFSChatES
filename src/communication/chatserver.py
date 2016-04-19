@@ -90,7 +90,7 @@ class ServerConnection(asyncio.Protocol):
     def generate_uid(self):
         uid = str(int(self.MAX_UID * random()))
         while self.master.uid_exists(uid):
-            uid = MAX_UID * random.random()
+            uid = MAX_UID * random()
         return uid
 
     def connection_made(self, transport):
