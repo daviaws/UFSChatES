@@ -1,6 +1,7 @@
 import asyncio
 from random import random
-from communication.communication_protocol import Protocol
+from communication import communication_protocol
+from communication.communication_protocol import Protocol, Register, Login, RegisterResult, LoginResult
 
 class Server():
 
@@ -15,7 +16,8 @@ class Server():
         self.uidToConnectionUser = {}
         ##user to connection/uid dict
         self.userToUid = {}
-        
+        ##registered users
+        self.registeredUsers = {}
         self.command_protocol = Protocol()
 
     def uid_exists(self, uid):
@@ -25,7 +27,7 @@ class Server():
 
     def add_connection(self, uid, connection):
         self.n_connections += 1
-        self.uidToConnectionUser[uid] = {'user' : None, 'connection' : self}
+        self.uidToConnectionUser[uid] = {'user' : None, 'connection' : connection}
         print("New connection with uid '{}'".format(uid))
         print("Number of connections is '{}'".format(self.n_connections))
 
@@ -52,15 +54,51 @@ class Server():
 
     def proccess_data(self, uid, data):
         user = self.uidToConnectionUser[uid]['user']
+        connection = self.uidToConnectionUser[uid]['connection']
         if user:
             print("Data received from a logged connection - username: {}".format(user))
         else:
             print("Data received from a dislogged connection")
-        result = self.command_protocol.decode(data)
-        # MY WORK IS DONE FOR TODAY T_T
-        print("RESULT OF PROCCESS '{}'".format(result))
-        if result[0] == 0:
-            print("'{}' parameteres {}".format(result[1], result[1].get_args()))
+        messageTuple = self.command_protocol.decode(data)
+        print("RESULT OF PROCCESS '{}'".format(messageTuple))
+        response = self.exec_command(messageTuple, user)
+        response = self.command_protocol.encode(response)
+        connection.send_client(response)
+
+    def exec_command(self, messageTuple, user):
+        result = messageTuple[0]
+        if result == communication_protocol.OK:
+            cmd = messageTuple[1]
+            date = messageTuple[2]
+            args = cmd.get_args()
+            print("'{}' parameteres {}".format(cmd, args))
+            if   isinstance(cmd, Login):
+                username = args['username']
+                passwd = args['passwd']
+                if username in self.registeredUsers:
+                    userpass = self.registeredUsers[username]
+                    if passwd == userpass:
+                        result = 'Login sucess!'
+                    else:
+                        result = 'Wrong password!'
+                else:
+                    result = 'User dont exists!'
+                print(result)
+                return LoginResult(result=result)
+            elif isinstance(cmd, Register):
+                username = args['username']
+                passwd = args['passwd']
+                if username in self.registeredUsers:
+                    result = 'User already exists!'
+                else:
+                    self.registeredUsers[username] = passwd
+                    result = 'Register sucess'
+                print(result)
+                return RegisterResult(result=result)
+        else:
+            print('Command is not valid. Code: {}'.format(result))
+            return InvalidCommand(code=result)
+
 
     def run(self):
         coroutine = self.loop.create_server(lambda: ServerConnection(self), self.ip, self.port)
@@ -106,3 +144,7 @@ class ServerConnection(asyncio.Protocol):
     def data_received(self, data):
         print("Received data from connection with uid '{}'".format(self.uid))
         self.master.proccess_data(self.uid, data)
+
+    def send_client(self, msg):
+        print("Sending data to connection with uid '{}'".format(self.uid))
+        self.transport.write(msg)

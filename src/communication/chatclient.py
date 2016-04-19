@@ -41,6 +41,13 @@ class Client():
         self.connection = None
         self.isconnected = False
 
+    def proccess_data(self, data):
+        messageTuple = self.command_protocol.decode(data)
+        print("RESULT OF PROCCESS '{}'".format(messageTuple))
+        if messageTuple[0] == 0:
+            cmd = messageTuple[1]
+            print('{} arguments: {}'.format(cmd, cmd.get_args()))
+
 class ClientConnection(asyncio.Protocol):
 
     def __init__(self, master, loop):
@@ -56,7 +63,8 @@ class ClientConnection(asyncio.Protocol):
         self.master.connected()
 
     def data_received(self, data):
-        print('Data received: {!r}'.format(data.decode()))
+        print('Data received from Server')
+        self.master.proccess_data(data)
 
     def connection_lost(self, exc):
         self.master.disconnected()

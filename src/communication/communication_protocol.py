@@ -44,6 +44,15 @@ class Register(Command):
             super().__init__(kwargs)
         self.keyargs = {'username', 'passwd'}
 
+class RegisterResult(Command):
+    
+    def __init__(self, args=None, **kwargs):
+        if args:
+            super().__init__(args)    
+        else:
+            super().__init__(kwargs)
+        self.keyargs = {'result'}
+
 class Login(Command):
     
     def __init__(self, args=None, **kwargs):
@@ -53,9 +62,27 @@ class Login(Command):
             super().__init__(kwargs)
         self.keyargs = {'username', 'passwd'}
 
+class LoginResult(Command):
+    
+    def __init__(self, args=None, **kwargs):
+        if args:
+            super().__init__(args)    
+        else:
+            super().__init__(kwargs)
+        self.keyargs = {'result'}
+
+class InvalidCommand(Command):
+
+    def __init__(self, args=None, **kwargs):
+        if args:
+            super().__init__(args)    
+        else:
+            super().__init__(kwargs)
+        self.keyargs = {'code'}
+
 class Protocol():
 
-    REF_DICT = {'Register' : Register, 'Login' : Login}
+    REF_DICT = {'Login' : Login, 'Register' : Register, 'LoginResult' : LoginResult, 'RegisterResult' : RegisterResult}
 
     def encode(self, cmd):
         cmd_name = type(cmd).__name__
