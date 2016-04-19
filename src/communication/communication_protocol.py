@@ -8,6 +8,7 @@ DATETIME_NONE = 1
 CMD_NONE = 2
 CMD_INVALID = 3
 CMD_ARGS_INVALID = 4
+ERROR_DECODING = 5
 
 class Command():
 
@@ -100,3 +101,4 @@ class Protocol():
             print(decodedCommand)
         except Exception as e:
             print('Exception caught in decoding data: {}'.format(e))
+            return (ERROR_DECODING,)
