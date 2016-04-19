@@ -52,18 +52,18 @@ class MyGui():
         loginFrame = Frame(mainFrame, bd=1, relief=SUNKEN)
         loginFrame.pack(anchor=self.anchor, fill=X)
         
-        nameWindow = Frame(loginFrame)
-        nameWindow.pack()
-        userNameLabel = Label(nameWindow, text="User Name")
+        nameFrame = Frame(loginFrame)
+        nameFrame.pack()
+        userNameLabel = Label(nameFrame, text="User Name")
         userNameLabel.pack()
-        userNameEntry = Entry(loginFrame)
+        userNameEntry = Entry(nameFrame)
         userNameEntry.pack()
         
-        passwdWindow = Frame(loginFrame)
-        passwdWindow.pack()
-        userPasswdLabel = Label(passwdWindow, text="Password")
+        passwdFrame = Frame(loginFrame)
+        passwdFrame.pack()
+        userPasswdLabel = Label(passwdFrame, text="Password")
         userPasswdLabel.pack()
-        userPasswdEntry = Entry(passwdWindow)
+        userPasswdEntry = Entry(passwdFrame)
         userPasswdEntry.pack()
 
         buttonFrame = Frame(loginFrame, height=2, bd=1, relief=SUNKEN)
@@ -94,11 +94,11 @@ class MyGui():
         loginFrame = Frame(mainFrame, bd=1, relief=SUNKEN)
         loginFrame.pack(anchor=self.anchor, fill=X)
         
-        nameWindow = Frame(loginFrame)
-        nameWindow.pack()
-        userNameLabel = Label(nameWindow, text="User Name")
+        nameFrame = Frame(loginFrame)
+        nameFrame.pack()
+        userNameLabel = Label(nameFrame, text="User Name")
         userNameLabel.pack()
-        userNameEntry = Entry(loginFrame)
+        userNameEntry = Entry(nameFrame)
         userNameEntry.pack()
 
         return mainFrame
