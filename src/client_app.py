@@ -3,6 +3,10 @@ import asyncio
 from functools import wraps
 from communication import chatclient
 from communication.communication_protocol import Register, Login
+from observers.observer import Observer
+
+from observers.client_events import *
+
 
 APP_NAME = 'UFSChat'
 HEIGHTPIXELS = 600
@@ -20,102 +24,52 @@ def runloop(func):
         return loop.run_until_complete(func(*args, **kwargs))
     return wrapper
 
-class MyGui():
+class MyGui(Observer):
     
     def __init__(self):
+        super().__init__()
         self.anchor = CENTER
 
         self.connection_try = None
         self.loop = asyncio.get_event_loop()
         self.client = chatclient.Client(self.loop, '127.0.0.1', 8888)
-        self.messages = None
         
         self.root = self.init_root()
-        self.loginScreen = self.build_login_frame()
-        self.testScreen = self.build_login_new()
+        self.loginScreen = LoginScreen(self, self.root, self.anchor)
+        self.loginScreen.raises()
+        self.loggedScreen = LoggedScreen(self, self.root, self.anchor)
 
-        self.raise_frame(self.loginScreen)
+        self.client.register(self)
 
-        self.log('Application started.')
+        self.loginScreen.log('Application started.')
 
     def init_root(self):
         root = Tk()
         root.title(APP_NAME)
         root.geometry('{}x{}'.format(WIDTHPIXELS, HEIGHTPIXELS))
         self.center(root)
-
         return root
 
-    def build_login_frame(self):
-        mainFrame = Frame(self.root, bd=1, relief=SUNKEN)
-
-        loginFrame = Frame(mainFrame, bd=1, relief=SUNKEN)
-        loginFrame.pack(anchor=self.anchor, fill=X)
-        
-        nameFrame = Frame(loginFrame)
-        nameFrame.pack()
-        userNameLabel = Label(nameFrame, text="User Name")
-        userNameLabel.pack()
-        userNameEntry = Entry(nameFrame)
-        userNameEntry.pack()
-        
-        passwdFrame = Frame(loginFrame)
-        passwdFrame.pack()
-        userPasswdLabel = Label(passwdFrame, text="Password")
-        userPasswdLabel.pack()
-        userPasswdEntry = Entry(passwdFrame)
-        userPasswdEntry.pack()
-
-        buttonFrame = Frame(loginFrame, height=2, bd=1, relief=SUNKEN)
-        buttonFrame.pack(fill=Y)
-        login = Button(buttonFrame, text='Login', command= lambda: self.client.send_command(Login(username=userNameEntry.get(), passwd=userPasswdEntry.get())))
-        login.pack()
-
-        consoleFrame = Frame(mainFrame)
-        consoleFrame.pack(fill=BOTH)
-        scrollbar = Scrollbar(consoleFrame)
-        scrollbar.pack(fill=Y, side=RIGHT)
-        self.messages = Text(consoleFrame, background='white', bd=2, relief=SUNKEN, state=DISABLED, yscrollcommand=scrollbar.set)
-        self.messages.pack(fill=BOTH)
-        scrollbar.config(command=self.messages.yview)
-
-        registrationFrame = Frame(mainFrame, bd=1, relief=SUNKEN)
-        registrationFrame.pack(anchor=self.anchor, fill=BOTH, side=BOTTOM)
-        register = Button(registrationFrame, text='Register', command= lambda: self.client.send_command(Register(username=userNameEntry.get(), passwd=userPasswdEntry.get())))
-        register.pack()
-        teste = Button(registrationFrame, text='Test', command= lambda: self.log('to testando :D'))
-        teste.pack(side=BOTTOM)
-        return mainFrame
-
-    def build_login_new(self):
-
-        mainFrame = Frame(self.root, bd=1, relief=SUNKEN)
-
-        loginFrame = Frame(mainFrame, bd=1, relief=SUNKEN)
-        loginFrame.pack(anchor=self.anchor, fill=X)
-        
-        nameFrame = Frame(loginFrame)
-        nameFrame.pack()
-        userNameLabel = Label(nameFrame, text="User Name")
-        userNameLabel.pack()
-        userNameEntry = Entry(nameFrame)
-        userNameEntry.pack()
-
-        return mainFrame
-    
-    #login = Button(buttonFrame, text='Login', command= lambda: self.raise_frame(self.testScreen, self.loginScreen))
-    def raise_frame(self, frame, kill_frame=None):
-        if kill_frame:
-            self.kill_frame(kill_frame)
-        frame.pack()
-
-    def kill_frame(self, frame):
-        frame.pack_forget()
-
-    def log(self, message):
-        self.messages.config(state=NORMAL)
-        self.messages.insert(END, message + '\n')
-        self.messages.config(state=DISABLED)
+    def update(self, *args, **kwargs):
+        event = args[0]
+        if event == event_internal_message:
+            msg = kwargs['params']['msg']
+            self.loginScreen.log(msg)
+        elif event == event_login_result:
+            result = kwargs['params']['result']
+            if result == 1:
+                self.loginScreen.fall()
+                self.loggedScreen.raises()
+            elif result == 0:
+                self.loginScreen.log('Login: Invalid password')
+            elif result == -1:
+                self.loginScreen.log('Login: Invalid user')
+        elif event == event_register_result:
+            result = kwargs['params']['result']
+            if result == 1:
+                self.loginScreen.log('Register: Sucess')
+            elif result == 0:
+                self.loginScreen.log('Register: User already exists')
 
     def center(self, toplevel):
         toplevel.update_idletasks()
@@ -145,6 +99,96 @@ class MyGui():
     def run(self):
         self.connection_try = asyncio.async(self.client.try_to_connect())
         yield from self.run_tk(self.root)
+
+class LoginScreen():
+    
+    def __init__(self, master, root, anchor):
+        self.master = master
+        self.mainFrame = Frame(root, bd=1, relief=SUNKEN)
+
+        loginFrame = Frame(self.mainFrame, bd=1, relief=SUNKEN)
+        loginFrame.pack(anchor=anchor, fill=X)
+        
+        nameFrame = Frame(loginFrame)
+        nameFrame.pack()
+        userNameLabel = Label(nameFrame, text="User Name")
+        userNameLabel.pack()
+        userNameEntry = Entry(nameFrame)
+        userNameEntry.pack()
+        
+        passwdFrame = Frame(loginFrame)
+        passwdFrame.pack()
+        userPasswdLabel = Label(passwdFrame, text="Password")
+        userPasswdLabel.pack()
+        userPasswdEntry = Entry(passwdFrame)
+        userPasswdEntry.pack()
+
+        buttonFrame = Frame(loginFrame, height=2, bd=1, relief=SUNKEN)
+        buttonFrame.pack(fill=Y)
+        login = Button(buttonFrame, text='Login', command= lambda: self.master.client.send_command(Login(username=userNameEntry.get(), passwd=userPasswdEntry.get())))
+        login.pack()
+
+        self.messages = TextBox(self.mainFrame)
+
+        registrationFrame = Frame(self.mainFrame, bd=1, relief=SUNKEN)
+        registrationFrame.pack(anchor=anchor, fill=BOTH, side=BOTTOM)
+        register = Button(registrationFrame, text='Register', command= lambda: self.master.client.send_command(Register(username=userNameEntry.get(), passwd=userPasswdEntry.get())))
+        register.pack()
+
+    def raises(self):
+        self.mainFrame.pack()
+
+    def fall(self):
+        self.mainFrame.pack_forget()
+
+    def log(self, message):
+        self.messages.log(message)
+
+class LoggedScreen():
+
+    def __init__(self, master, root, anchor):
+
+        self.master = master
+        self.mainFrame = Frame(root, bd=1, relief=SUNKEN)
+
+        loginFrame = Frame(self.mainFrame, bd=1, relief=SUNKEN)
+        loginFrame.pack(anchor=anchor, fill=X)
+        
+        nameFrame = Frame(loginFrame)
+        nameFrame.pack()
+        userNameLabel = Label(nameFrame, text="User Name")
+        userNameLabel.pack()
+        userNameEntry = Entry(nameFrame)
+        userNameEntry.pack()
+
+    def raises(self):
+        self.mainFrame.pack()
+
+    def fall(self):
+        self.mainFrame.pack_forget()
+
+class TextBox():
+
+    def __init__(self, master):
+        consoleFrame = Frame(master)
+        consoleFrame.pack(fill=BOTH)
+        scrollbar = Scrollbar(consoleFrame)
+        scrollbar.pack(fill=Y, side=RIGHT)
+        self.messages = Text(consoleFrame, background='white', bd=2, relief=SUNKEN, state=DISABLED, yscrollcommand=scrollbar.set)
+        self.messages.pack(fill=BOTH)
+        scrollbar.config(command=self.messages.yview)
+
+    def log(self, message):
+        self.messages.config(state=NORMAL)
+        self.messages.insert(END, message + '\n')
+        self.messages.config(state=DISABLED)
+        self.messages.see(END)
+
+    def able(self):
+        self.messages.config(state=NORMAL)
+
+    def disable(self):
+        self.messages.config(state=DISABLED)
 
 if __name__ == "__main__":
     gui = MyGui()

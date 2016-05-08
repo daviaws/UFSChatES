@@ -78,21 +78,21 @@ class Server():
                 if username in self.registeredUsers:
                     userpass = self.registeredUsers[username]
                     if passwd == userpass:
-                        result = 'Login sucess!'
+                        result = 1
                     else:
-                        result = 'Wrong password!'
+                        result = 0
                 else:
-                    result = 'User dont exists!'
+                    result = -1
                 print(result)
                 return LoginResult(result=result)
             elif isinstance(cmd, Register):
                 username = args['username']
                 passwd = args['passwd']
                 if username in self.registeredUsers:
-                    result = 'User already exists!'
+                    result = 0
                 else:
                     self.registeredUsers[username] = passwd
-                    result = 'Register sucess'
+                    result = 1
                 print(result)
                 return RegisterResult(result=result)
         else:
