@@ -109,7 +109,7 @@ class LoginScreen():
         self.mainFrame = Frame(root, bd=1, relief=SUNKEN)
 
         loginFrame = Frame(self.mainFrame, bd=1, relief=SUNKEN)
-        loginFrame.pack(anchor=anchor, fill=X)
+        loginFrame.pack(anchor=anchor, fill=BOTH)
         
         nameFrame = Frame(loginFrame)
         nameFrame.pack()
@@ -138,7 +138,7 @@ class LoginScreen():
         register.pack()
 
     def raises(self):
-        self.mainFrame.pack()
+        self.mainFrame.pack(expand=True, fill=BOTH)
 
     def fall(self):
         self.mainFrame.pack_forget()
@@ -153,18 +153,19 @@ class LoggedScreen():
         self.master = master
         self.mainFrame = Frame(root, bd=1, relief=SUNKEN)
 
-        loginFrame = Frame(self.mainFrame, bd=1, relief=SUNKEN)
-        loginFrame.pack(anchor=anchor, fill=X)
+        loggedFrame = Frame(self.mainFrame, bd=1, relief=SUNKEN)
+        loggedFrame.pack(expand=True, fill=BOTH)
         
-        nameFrame = Frame(loginFrame)
-        nameFrame.pack()
-        userNameLabel = Label(nameFrame, text="User Name")
-        userNameLabel.pack()
-        userNameEntry = Entry(nameFrame)
-        userNameEntry.pack()
+        listbox = Listbox(loggedFrame)
+        listbox.pack(expand=True, fill=BOTH)
+
+        listbox.insert(END, "a list entry")
+
+        for item in ["one", "two", "three", "four"]:
+            listbox.insert(END, item)
 
     def raises(self):
-        self.mainFrame.pack()
+        self.mainFrame.pack(expand=True, fill=BOTH)
 
     def fall(self):
         self.mainFrame.pack_forget()
@@ -173,11 +174,11 @@ class TextBox():
 
     def __init__(self, master):
         consoleFrame = Frame(master)
-        consoleFrame.pack(fill=BOTH)
+        consoleFrame.pack(expand=1, fill=BOTH)
         scrollbar = Scrollbar(consoleFrame)
         scrollbar.pack(fill=Y, side=RIGHT)
         self.messages = Text(consoleFrame, background='white', bd=2, relief=SUNKEN, state=DISABLED, yscrollcommand=scrollbar.set)
-        self.messages.pack(fill=BOTH)
+        self.messages.pack(expand=1, fill=BOTH)
         scrollbar.config(command=self.messages.yview)
 
     def log(self, message):
