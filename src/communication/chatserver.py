@@ -71,7 +71,6 @@ class Server():
             connection.send_client(response)
 
     def exec_command(self, messageTuple, uid, user, logged):
-        print('I have an uid {}'.format(uid))
         result = messageTuple[0]
         if result == communication_protocol.OK:
             cmd = messageTuple[1]
