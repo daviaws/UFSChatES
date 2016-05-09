@@ -164,6 +164,15 @@ class LoggedScreen():
         for item in ["one", "two", "three", "four"]:
             listbox.insert(END, item)
 
+        def onselect(evt):
+            # Note here that Tkinter passes an event object to onselect()
+            w = evt.widget
+            index = int(w.curselection()[0])
+            value = w.get(index)
+            print ('You selected item %d: "%s"' % (index, value))
+
+        listbox.bind('<<ListboxSelect>>', onselect)
+
     def raises(self):
         self.mainFrame.pack(expand=True, fill=BOTH)
 
