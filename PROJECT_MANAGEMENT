@@ -1,8 +1,5 @@
 TASKS
 
 Client App:
-BIND dos eventos do modelo os elementos da GUI - Observador-Observado(?).
-Processamento de comandos
-
-Server App:
-Processamento de comandos
+Suporte as novas features (adicionar contatos e mandar mensagens)
+Suporte na gui pras features.
