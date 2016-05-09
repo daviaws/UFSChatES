@@ -1,7 +1,7 @@
 import asyncio
 from random import random
 from communication import communication_protocol
-from communication.communication_protocol import Protocol, Register, Login, RegisterResult, LoginResult
+from communication.communication_protocol import *
 
 class Server():
 
@@ -18,6 +18,7 @@ class Server():
         self.userToUid = {}
         ##registered users
         self.registeredUsers = {}
+        self.userToContacts = {}
         self.command_protocol = Protocol()
 
     def uid_exists(self, uid):
@@ -34,6 +35,7 @@ class Server():
     def remove_connection(self, uid):
         self.n_connections -= 1
         user = self.uidToConnectionUser[uid]['user']
+        print(user)
         del self.uidToConnectionUser[uid]
         if user:
             del self.userToUid[user]
@@ -57,15 +59,19 @@ class Server():
         connection = self.uidToConnectionUser[uid]['connection']
         if user:
             print("Data received from a logged connection - username: {}".format(user))
+            logged = True
         else:
             print("Data received from a dislogged connection")
+            logged = False
         messageTuple = self.command_protocol.decode(data)
         print("RESULT OF PROCCESS '{}'".format(messageTuple))
-        response = self.exec_command(messageTuple, user)
-        response = self.command_protocol.encode(response)
-        connection.send_client(response)
+        response = self.exec_command(messageTuple, uid, user, logged)
+        if response:
+            response = self.command_protocol.encode(response)
+            connection.send_client(response)
 
-    def exec_command(self, messageTuple, user):
+    def exec_command(self, messageTuple, uid, user, logged):
+        print('I have an uid {}'.format(uid))
         result = messageTuple[0]
         if result == communication_protocol.OK:
             cmd = messageTuple[1]
@@ -75,26 +81,60 @@ class Server():
             if   isinstance(cmd, Login):
                 username = args['username']
                 passwd = args['passwd']
-                if username in self.registeredUsers:
-                    userpass = self.registeredUsers[username]
-                    if passwd == userpass:
-                        result = 'Login sucess!'
+                if not username in self.userToUid:
+                    if username in self.registeredUsers:
+                        userpass = self.registeredUsers[username]
+                        if passwd == userpass:
+                            self.user_logged(uid, username)
+                            result = 1
+                        else:
+                            result = 0
                     else:
-                        result = 'Wrong password!'
+                        result = -1
                 else:
-                    result = 'User dont exists!'
-                print(result)
+                    result = 2
                 return LoginResult(result=result)
             elif isinstance(cmd, Register):
                 username = args['username']
                 passwd = args['passwd']
                 if username in self.registeredUsers:
-                    result = 'User already exists!'
+                    result = 0
                 else:
                     self.registeredUsers[username] = passwd
-                    result = 'Register sucess'
-                print(result)
+                    result = 1
                 return RegisterResult(result=result)
+            else:
+                if logged:
+                    if isinstance(cmd, SendMessage):
+                        to = args['to']
+                        if to in self.userToUid:
+                            responseUID = userToUid[to]
+                            connectionToRespond = self.uidToConnectionUser[responseUID]
+                            encodedCommand = self.command_protocol.encode(cmd)
+                            connectionToRespond.send_client(encodedCommand)
+                            result = 1
+                        else:
+                            result = 0
+                        return SendMessageResult(result=result)
+                    elif isinstance(cmd, AddContact):
+                        contact = args['user']
+                        if contact in self.registeredUsers:
+                            if user in self.userToContacts[user]:
+                                self.userToContacts[user].append(contact)
+                            else:
+                                self.userToContacts[user] = [contact]
+                            result = 1
+                        else:
+                            result = 0
+                        return AddContactResult(result=result)
+                    elif isinstance(cmd, GetContacts):
+                        if user in self.userToContacts:
+                            result = self.userToContacts[user]
+                        else:
+                            result = []
+                        return GetContactsResult(result=result)
+                else:
+                    print('Ignoring command {} cause connection is dislogged.'.format())
         else:
             print('Command is not valid. Code: {}'.format(result))
             return InvalidCommand(code=result)

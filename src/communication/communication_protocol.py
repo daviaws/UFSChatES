@@ -71,6 +71,58 @@ class LoginResult(Command):
             super().__init__(kwargs)
         self.keyargs = {'result'}
 
+class SendMessage(Command):
+    
+    def __init__(self, args=None, **kwargs):
+        if args:
+            super().__init__(args)    
+        else:
+            super().__init__(kwargs)
+        self.keyargs = {'to', 'from', 'date', 'msg'}
+
+class SendMessageResult(Command):
+    
+    def __init__(self, args=None, **kwargs):
+        if args:
+            super().__init__(args)    
+        else:
+            super().__init__(kwargs)
+        self.keyargs = {'result'}
+
+class AddContact(Command):
+    
+    def __init__(self, args=None, **kwargs):
+        if args:
+            super().__init__(args)    
+        else:
+            super().__init__(kwargs)
+        self.keyargs = {'user'}
+
+class AddContactResult(Command):
+    
+    def __init__(self, args=None, **kwargs):
+        if args:
+            super().__init__(args)    
+        else:
+            super().__init__(kwargs)
+        self.keyargs = {'result'}
+
+class GetContacts(Command):
+    
+    def __init__(self, args=None, **kwargs):
+        if args:
+            super().__init__(args)    
+        else:
+            super().__init__(kwargs)
+
+class GetContactsResult(Command):
+    
+    def __init__(self, args=None, **kwargs):
+        if args:
+            super().__init__(args)    
+        else:
+            super().__init__(kwargs)
+
 class InvalidCommand(Command):
 
     def __init__(self, args=None, **kwargs):
