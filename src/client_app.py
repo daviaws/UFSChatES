@@ -57,7 +57,9 @@ class MyGui(Observer):
             self.loginScreen.log(msg)
         elif event == event_login_result:
             result = kwargs['params']['result']
-            if result == 1:
+            if result == 2:
+                self.loginScreen.log('Login: User already logged')
+            elif result == 1:
                 self.loginScreen.fall()
                 self.loggedScreen.raises()
             elif result == 0:
