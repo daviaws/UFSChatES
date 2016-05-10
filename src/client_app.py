@@ -207,7 +207,8 @@ class FriendList():
             self.listbox.insert(END, item)
 
     def ondoubleclick(self, event):
-        self.chat_contact(self.selection)
+        if self.chat:
+            self.chat_contact(self.selection)
 
     def onselect(self, event):
         self.destroy_menu()
