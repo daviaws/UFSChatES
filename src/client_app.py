@@ -46,7 +46,7 @@ class MyGui(Observer):
     def init_root(self):
         root = Tk()
         root.title(APP_NAME)
-        root.geometry('{}x{}'.format(WIDTHPIXELS, HEIGHTPIXELS))
+        root.geometry('%dx%d' % (WIDTHPIXELS, HEIGHTPIXELS))
         self.center(root)
         return root
 
@@ -155,23 +155,27 @@ class LoggedScreen():
 
         loggedFrame = Frame(self.mainFrame, bd=1, relief=SUNKEN)
         loggedFrame.pack(expand=True, fill=BOTH)
-        
-        listbox = Listbox(loggedFrame)
-        listbox.pack(expand=True, fill=BOTH)
 
-        listbox.insert(END, "a list entry")
+        login = Button(loggedFrame, text='Add contact', command= lambda: print('popup add contact'))
+        login.pack()
 
-        for item in ["one", "two", "three", "four"]:
-            listbox.insert(END, item)
+        onlineFrame = Frame(loggedFrame, bd=1, relief=SUNKEN)
+        onlineFrame.pack(expand=True, fill=BOTH)
+        onlineFriendsLabel = Label(onlineFrame, text="Online Friends")
+        onlineFriendsLabel.pack()
+        self.onlineFriends = FriendList(master, onlineFrame)
+        self.onlineFriends.able_chat()
+        self.onlineFriends.reload(['one', 'two', 'three'])
 
-        def onselect(evt):
-            # Note here that Tkinter passes an event object to onselect()
-            w = evt.widget
-            index = int(w.curselection()[0])
-            value = w.get(index)
-            print ('You selected item %d: "%s"' % (index, value))
+        offlineFrame = Frame(loggedFrame, bd=1, relief=SUNKEN)
+        offlineFrame.pack(expand=True, fill=BOTH)
+        offlineFriendsLabel = Label(offlineFrame, text="Offline Friends")
+        offlineFriendsLabel.pack()
+        self.offlineFriends = FriendList(master, offlineFrame)
+        self.offlineFriends.reload(['four', 'five', 'six'])
 
-        listbox.bind('<<ListboxSelect>>', onselect)
+        logout = Button(loggedFrame, text='Logout', command= lambda: print('logout'))
+        logout.pack()
 
     def raises(self):
         self.mainFrame.pack(expand=True, fill=BOTH)
@@ -179,10 +183,77 @@ class LoggedScreen():
     def fall(self):
         self.mainFrame.pack_forget()
 
+class FriendList():
+
+    def __init__(self, master, root):
+        self.master = master
+
+        self.listbox = Listbox(root, selectmode=SINGLE)
+        self.listbox.pack(expand=True, fill=BOTH)
+
+        self.menu = None
+        self.chat = False
+
+        self.listbox.bind('<Double-Button-1>', self.ondoubleclick)
+        self.listbox.bind('<<ListboxSelect>>', self.onselect)
+        self.listbox.bind('<3>', lambda e: self.context_menu(e))
+
+    def able_chat(self):
+        self.chat = True
+
+    def reload(self, friend_list):
+        self.listbox.delete(0, END)
+        for item in friend_list:
+            self.listbox.insert(END, item)
+
+    def ondoubleclick(self, event):
+        self.chat_contact(self.selection)
+
+    def onselect(self, event):
+        self.destroy_menu()
+        w = event.widget
+        index = int(w.curselection()[0])
+        item = w.get(index)
+        self.selection = item
+
+    def context_menu(self, event):
+        widget = event.widget
+        index = widget.nearest(event.y)
+        _, yoffset, _, height = widget.bbox(index)
+        if event.y > height + yoffset + 5:
+            self.destroy_menu()
+            return
+        item = widget.get(index)
+        self.listbox.selection_clear(0, END)
+        self.listbox.selection_set(index)
+
+        self.destroy_menu()
+        self.menu = Menu(self.listbox, tearoff=0)
+        self.menu.add_command(label="Add contact", command= lambda: print('popup add contact'))
+        self.menu.add_separator()
+        if self.chat:
+            self.menu.add_command(label="Chat with '%s'" % (item), command= lambda: self.chat_contact(item))
+        self.menu.add_command(label="Remove '%s'" % (item), command= lambda: self.remove_contact(item))
+        self.menu.add_separator()
+        self.menu.add_command(label="Exit menu", command=self.destroy_menu)
+        self.menu.post(event.x_root, event.y_root)
+
+    def chat_contact(self, contact):
+        print ("Chat with '%s'" % (contact))
+
+    def remove_contact(self, contact):
+        print ("Remove '%s'" % (contact))
+
+    def destroy_menu(self):
+        if self.menu:
+            self.menu.unpost()
+            self.menu = None
+
+
 class TextBox():
 
-    def __init__(self, master):
-        consoleFrame = Frame(master)
+    def __init__(self, root):
+        consoleFrame = Frame(root)
         consoleFrame.pack(expand=1, fill=BOTH)
         scrollbar = Scrollbar(consoleFrame)
         scrollbar.pack(fill=Y, side=RIGHT)
