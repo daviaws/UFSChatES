@@ -2,7 +2,7 @@ import asyncio
 import time
 from communication import communication_protocol
 from observers.observable import Observable
-from observers.client_events import *
+from observers.model_events import *
 
 class Client(Observable):
 
