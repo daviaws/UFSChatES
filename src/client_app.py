@@ -9,8 +9,7 @@ from observers.client_events import *
 
 
 APP_NAME = 'UFSChat'
-HEIGHTPIXELS = 600
-WIDTHPIXELS = 300
+
 
 def runloop(func):
     '''
@@ -26,6 +25,9 @@ def runloop(func):
 
 class MyGui(Observer):
     
+    HEIGHTPIXELS = 600
+    WIDTHPIXELS = 300
+
     def __init__(self):
         super().__init__()
         self.anchor = CENTER
@@ -34,21 +36,22 @@ class MyGui(Observer):
         self.loop = asyncio.get_event_loop()
         self.client = chatclient.Client(self.loop, '127.0.0.1', 8888)
         
-        self.root = self.init_root()
+        self.root = None
+        self.init_root()
         self.loginScreen = LoginScreen(self, self.root, self.anchor)
         self.loginScreen.raises()
         self.loggedScreen = LoggedScreen(self, self.root, self.anchor)
+        self.addContactWindow = AddContactWindow(self)
 
         self.client.register(self)
 
         self.loginScreen.log('Application started.')
 
     def init_root(self):
-        root = Tk()
-        root.title(APP_NAME)
-        root.geometry('%dx%d' % (WIDTHPIXELS, HEIGHTPIXELS))
-        self.center(root)
-        return root
+        self.root = Tk()
+        self.root.title(APP_NAME)
+        self.root.geometry('%dx%d' % (self.WIDTHPIXELS, self.HEIGHTPIXELS))
+        self.center()
 
     def update(self, *args, **kwargs):
         event = args[0]
@@ -72,15 +75,17 @@ class MyGui(Observer):
                 self.loginScreen.log('Register: Sucess')
             elif result == 0:
                 self.loginScreen.log('Register: User already exists')
+        elif event == event_raise_add_contact:
+            self.addContactWindow.raises()
 
-    def center(self, toplevel):
-        toplevel.update_idletasks()
-        w = toplevel.winfo_screenwidth()
-        h = toplevel.winfo_screenheight()
-        size = tuple(int(_) for _ in toplevel.geometry().split('+')[0].split('x'))
+    def center(self):
+        self.root.update_idletasks()
+        w = self.root.winfo_screenwidth()
+        h = self.root.winfo_screenheight()
+        size = tuple(int(_) for _ in self.root.geometry().split('+')[0].split('x'))
         x = w/2 - size[0]/2
         y = h/2 - size[1]/2
-        toplevel.geometry("%dx%d+%d+%d" % (size + (x, y)))
+        self.root.geometry("%dx%d+%d+%d" % (size + (x, y)))
 
     @asyncio.coroutine
     def run_tk(self, root, interval=0.05):
@@ -101,6 +106,46 @@ class MyGui(Observer):
     def run(self):
         self.connection_try = asyncio.async(self.client.try_to_connect())
         yield from self.run_tk(self.root)
+
+class AddContactWindow():
+    
+    WIDTHPIXELS = 200
+    HEIGHTPIXELS = 80
+
+    def __init__(self, master):
+        self.master = master
+        self.root = Tk()
+        self.root.geometry('%dx%d' % (self.WIDTHPIXELS, self.HEIGHTPIXELS))
+        self.center()
+        self.root.withdraw()
+        self.root.title('Add contact')
+        self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
+
+        loginFrame = Frame(self.root, bd=1, relief=SUNKEN)
+        loginFrame.pack(anchor=CENTER, fill=BOTH)
+        
+        nameFrame = Frame(loginFrame)
+        nameFrame.pack()
+        addContactLabel = Label(nameFrame, text="Add Contact")
+        addContactLabel.pack()
+        addContactEntry = Entry(nameFrame)
+        addContactEntry.pack()
+
+    def center(self):
+        self.root.update_idletasks()
+        w = self.root.winfo_screenwidth()
+        h = self.root.winfo_screenheight()
+        size = tuple(int(_) for _ in self.root.geometry().split('+')[0].split('x'))
+        x = w/2 - size[0]/2
+        y = h/2 - size[1]/2
+        self.root.geometry("%dx%d+%d+%d" % (size + (x, y)))
+
+    def on_closing(self):
+        self.root.withdraw()
+
+    def raises(self):
+        self.center()
+        self.root.deiconify()
 
 class LoginScreen():
     
@@ -156,7 +201,7 @@ class LoggedScreen():
         loggedFrame = Frame(self.mainFrame, bd=1, relief=SUNKEN)
         loggedFrame.pack(expand=True, fill=BOTH)
 
-        login = Button(loggedFrame, text='Add contact', command= lambda: print('popup add contact'))
+        login = Button(loggedFrame, text='Add contact', command= lambda: self.master.update(event_raise_add_contact))
         login.pack()
 
         onlineFrame = Frame(loggedFrame, bd=1, relief=SUNKEN)
@@ -230,8 +275,6 @@ class FriendList():
 
         self.destroy_menu()
         self.menu = Menu(self.listbox, tearoff=0)
-        self.menu.add_command(label="Add contact", command= lambda: print('popup add contact'))
-        self.menu.add_separator()
         if self.chat:
             self.menu.add_command(label="Chat with '%s'" % (item), command= lambda: self.chat_contact(item))
         self.menu.add_command(label="Remove '%s'" % (item), command= lambda: self.remove_contact(item))
