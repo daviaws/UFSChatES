@@ -35,6 +35,8 @@ class Controller():
         self.mainWindow = MainWindow(APP_NAME)
         root = self.mainWindow.get_root()
         self.addContactWindow = AddContactWindow(self)
+        self.chatWindows = []
+
         self.loginScreen = LoginScreen(self, root)
         self.loginScreen.raises()
         self.loggedScreen = LoggedScreen(self, root)
@@ -44,10 +46,10 @@ class Controller():
     def update(self, *args, **kwargs):
         event = args[0]
         if event == event_internal_message:
-            msg = kwargs['params']['msg']
+            msg = kwargs['msg']
             self.loginScreen.log(msg)
         elif event == event_login_result:
-            result = kwargs['params']['result']
+            result = kwargs['result']
             if result == 2:
                 self.loginScreen.log('Login: User already logged')
             elif result == 1:
@@ -58,14 +60,17 @@ class Controller():
             elif result == -1:
                 self.loginScreen.log('Login: Invalid user')
         elif event == event_register_result:
-            result = kwargs['params']['result']
+            result = kwargs['result']
             if result == 1:
-                self.loginScreen.log('Register: Sucess')
+                self.loginScreen.log('Register: Success')
             elif result == 0:
                 self.loginScreen.log('Register: User already exists')
         elif event == event_popup_add_contact:
             self.addContactWindow.raises()
-
+        elif event == event_pressed_add_contact:
+            username = kwargs['username']
+            print('Solicited to add user: "%s"' % username)
+    
     @asyncio.coroutine
     def run_tk(self, root, interval=0.05):
         '''
@@ -117,6 +122,53 @@ class MainWindow(Observer):
         y = h/2 - size[1]/2
         toplevel.geometry("%dx%d+%d+%d" % (size + (x, y)))
 
+class ChatWindow():
+    
+    WIDTHPIXELS = 200
+    HEIGHTPIXELS = 80
+
+    def __init__(self, master):
+        self.master = master
+        self.root = Tk()
+        self.root.geometry('%dx%d' % (self.WIDTHPIXELS, self.HEIGHTPIXELS))
+        self.root.resizable(0, 0)
+        self.center()
+        self.root.withdraw()
+        self.root.title('Add contact')
+        self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
+
+        addContactFrame = Frame(self.root, bd=1, relief=SUNKEN)
+        addContactFrame.pack(anchor=CENTER, fill=BOTH)
+        
+        addContactLabel = Label(addContactFrame, text="Add Contact")
+        addContactLabel.pack()
+        self.addContactEntry = Entry(addContactFrame)
+        self.addContactEntry.pack()
+        ################################TODO
+        addContactButton = Button(addContactFrame, text='Add', command= lambda: self.master.update(event_pressed_add_contact, username=self.get_entry()))
+        addContactButton.pack()
+
+    def get_entry(self):
+        entry = self.addContactEntry.get()
+        print('Entry is %s' % entry)
+        return entry
+
+    def center(self):
+        self.root.update_idletasks()
+        w = self.root.winfo_screenwidth()
+        h = self.root.winfo_screenheight()
+        size = tuple(int(_) for _ in self.root.geometry().split('+')[0].split('x'))
+        x = w/2 - size[0]/2
+        y = h/2 - size[1]/2
+        self.root.geometry("%dx%d+%d+%d" % (size + (x, y)))
+
+    def on_closing(self):
+        self.root.withdraw()
+
+    def raises(self):
+        self.center()
+        self.root.deiconify()
+
 class AddContactWindow():
     
     WIDTHPIXELS = 200
@@ -135,12 +187,12 @@ class AddContactWindow():
         addContactFrame = Frame(self.root, bd=1, relief=SUNKEN)
         addContactFrame.pack(anchor=CENTER, fill=BOTH)
         
-        nameFrame = Frame(addContactFrame)
-        nameFrame.pack()
-        addContactLabel = Label(nameFrame, text="Add Contact")
+        addContactLabel = Label(addContactFrame, text="Add Contact")
         addContactLabel.pack()
-        addContactEntry = Entry(nameFrame)
+        addContactEntry = Entry(addContactFrame)
         addContactEntry.pack()
+        addContactButton = Button(addContactFrame, text='Add', command= lambda: self.master.update(event_pressed_add_contact, username=addContactEntry.get()))
+        addContactButton.pack()
 
     def center(self):
         self.root.update_idletasks()
@@ -157,7 +209,6 @@ class AddContactWindow():
     def raises(self):
         self.center()
         self.root.deiconify()
-
 
 class LoginScreen():
     
@@ -305,15 +356,14 @@ class FriendList():
             self.menu.unpost()
             self.menu = None
 
-
 class TextBox():
 
-    def __init__(self, root):
+    def __init__(self, root, able=DISABLED):
         consoleFrame = Frame(root)
         consoleFrame.pack(expand=1, fill=BOTH)
         scrollbar = Scrollbar(consoleFrame)
         scrollbar.pack(fill=Y, side=RIGHT)
-        self.messages = Text(consoleFrame, background='white', bd=2, relief=SUNKEN, state=DISABLED, yscrollcommand=scrollbar.set)
+        self.messages = Text(consoleFrame, background='white', bd=2, relief=SUNKEN, state=able, yscrollcommand=scrollbar.set)
         self.messages.pack(expand=1, fill=BOTH)
         scrollbar.config(command=self.messages.yview)
 

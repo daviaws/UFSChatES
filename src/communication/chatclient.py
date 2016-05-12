@@ -56,12 +56,10 @@ class Client(Observable):
             print("'{}' parameteres {}".format(cmd, args))
             if   isinstance(cmd, communication_protocol.LoginResult):
                 event = event_login_result
-                params = {'result' : args['result']}
-                self.update_observers(event, params=params)
+                self.update_observers(event, result=args['result'])
             elif isinstance(cmd, communication_protocol.RegisterResult):
                 event = event_register_result
-                params = {'result' : args['result']}
-                self.update_observers(event, params=params)
+                self.update_observers(event, result=args['result'])
         else:
             self.internal_msg('Command is not valid. Code: {}'.format(result))
             return InvalidCommand(code=result)
@@ -69,8 +67,7 @@ class Client(Observable):
     def internal_msg(self, msg):
         print(msg)
         event = event_internal_message
-        params = {'msg' : msg}
-        self.update_observers(event, params=params)
+        self.update_observers(event, msg=msg)
 
 class ClientConnection(asyncio.Protocol):
 

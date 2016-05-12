@@ -54,7 +54,7 @@ class Server():
         self.uidToConnectionUser[uid]['user'] =  None
         print("User '{}' dislogged from connection uid '{}'".format(user, uid))
 
-    def proccess_data(self, uid, data):
+    def process_data(self, uid, data):
         user = self.uidToConnectionUser[uid]['user']
         connection = self.uidToConnectionUser[uid]['connection']
         if user:
@@ -64,7 +64,7 @@ class Server():
             print("Data received from a dislogged connection")
             logged = False
         messageTuple = self.command_protocol.decode(data)
-        print("RESULT OF PROCCESS '{}'".format(messageTuple))
+        print("RESULT OF PROCESS '{}'".format(messageTuple))
         response = self.exec_command(messageTuple, uid, user, logged)
         if response:
             response = self.command_protocol.encode(response)
@@ -182,7 +182,7 @@ class ServerConnection(asyncio.Protocol):
 
     def data_received(self, data):
         print("Received data from connection with uid '{}'".format(self.uid))
-        self.master.proccess_data(self.uid, data)
+        self.master.process_data(self.uid, data)
 
     def send_client(self, msg):
         print("Sending data to connection with uid '{}'".format(self.uid))
