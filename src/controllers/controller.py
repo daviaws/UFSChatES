@@ -56,12 +56,12 @@ class Controller():
         if event == event_internal_message:
             msg = kwargs['msg']
             self.loginScreen.log(msg)
-        elif event == event_login:
+        elif event == event_pressed_send_login:
             username = kwargs['username']
             passwd = kwargs['passwd']
             self.client.send_command(Login(username=username, passwd=passwd))
             self.username = username
-        elif event == event_register:
+        elif event == event_pressed_send_register:
             username = kwargs['username']
             passwd = kwargs['passwd']
             self.client.send_command(Register(username=username, passwd=passwd))
@@ -82,7 +82,7 @@ class Controller():
         elif event == event_closed_chat_window:
             username = kwargs['username']
             self.win_man.close(username)
-        elif event == event_send_message_client:
+        elif event == event_pressed_send_message:
             fromuser = self.username
             to = kwargs['to']
             date = str(datetime.now())

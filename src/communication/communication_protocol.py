@@ -2,6 +2,7 @@ import base64
 import json
 from datetime import datetime
 from copy import deepcopy
+from observers.model_events import *
 
 OK = 0
 DATETIME_NONE = 1
@@ -15,12 +16,16 @@ class Command():
     def __init__(self, args=None):
         self.args = args
         self.date = None
+        self.code = None
         self.keyargs = set()
 
     def has_args(self):
         if self.args:
             return True
         return False
+
+    def get_event(self):
+        return self.code
 
     def get_args(self):
         return deepcopy(self.args)
@@ -42,6 +47,7 @@ class Register(Command):
             super().__init__(args)    
         else:
             super().__init__(kwargs)
+        self.code = event_register
         self.keyargs = {'username', 'passwd'}
 
 class RegisterResult(Command):
@@ -51,6 +57,7 @@ class RegisterResult(Command):
             super().__init__(args)    
         else:
             super().__init__(kwargs)
+        self.code = event_register_result
         self.keyargs = {'result'}
 
 class Login(Command):
@@ -60,6 +67,7 @@ class Login(Command):
             super().__init__(args)    
         else:
             super().__init__(kwargs)
+        self.code = event_login
         self.keyargs = {'username', 'passwd'}
 
 class LoginResult(Command):
@@ -69,6 +77,7 @@ class LoginResult(Command):
             super().__init__(args)    
         else:
             super().__init__(kwargs)
+        self.code = event_login_result
         self.keyargs = {'result'}
 
 class SendMessage(Command):
@@ -78,6 +87,7 @@ class SendMessage(Command):
             super().__init__(args)    
         else:
             super().__init__(kwargs)
+        self.code = event_send_message
         self.keyargs = {'to', 'fromuser', 'date', 'msg'}
 
 class SendMessageResult(Command):
@@ -87,6 +97,7 @@ class SendMessageResult(Command):
             super().__init__(args)    
         else:
             super().__init__(kwargs)
+        self.code = event_send_message_result
         self.keyargs = {'result'}
 
 class AddContact(Command):
@@ -96,6 +107,7 @@ class AddContact(Command):
             super().__init__(args)    
         else:
             super().__init__(kwargs)
+        self.code = event_add_contact
         self.keyargs = {'user'}
 
 class AddContactResult(Command):
@@ -105,6 +117,7 @@ class AddContactResult(Command):
             super().__init__(args)    
         else:
             super().__init__(kwargs)
+        self.code = event_add_contact_result
         self.keyargs = {'result'}
 
 class GetContacts(Command):
@@ -114,6 +127,7 @@ class GetContacts(Command):
             super().__init__(args)    
         else:
             super().__init__(kwargs)
+        self.code = event_get_contacts
 
 class GetContactsResult(Command):
     
@@ -122,6 +136,7 @@ class GetContactsResult(Command):
             super().__init__(args)    
         else:
             super().__init__(kwargs)
+        self.code = event_get_contacts_result
 
 class InvalidCommand(Command):
 

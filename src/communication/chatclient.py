@@ -55,18 +55,17 @@ class Client(Observable):
             date = messageTuple[2]
             args = cmd.get_args()
             print("'{}' parameteres {}".format(cmd, args))
-            if   isinstance(cmd, communication_protocol.LoginResult):
-                event = event_login_result
-                self.update_observers(event, result=args['result'])
-            elif isinstance(cmd, communication_protocol.RegisterResult):
-                event = event_register_result
-                self.update_observers(event, result=args['result'])
+            event = cmd.get_event()
+            if cmd.has_args():
+            	args = cmd.get_args()
+            	self.update_observers(event, result=args['result'])
+            else:
+            	self.update_observers(event, **args)
         else:
             self.internal_msg('Command is not valid. Code: {}'.format(result))
             return communication_protocol.InvalidCommand(code=result)
 
     def internal_msg(self, msg):
-        print(msg)
         event = event_internal_message
         self.update_observers(event, msg=msg)
 

@@ -2,7 +2,7 @@ from tkinter import *
 from tkinter import messagebox
 
 from gui.widgets.text_box import TextBox
-from observers.gui_events import event_send_message_client, event_closed_chat_window
+from observers.gui_events import event_pressed_send_message, event_closed_chat_window
 
 class ChatWindow():
     
@@ -41,7 +41,7 @@ class ChatWindow():
             messagebox.showwarning('Cannot send message', 'Message pendig to %s.' % self.chating_with, parent=self.root)
         else:
             self.pending_message = True
-            self.master.update(event_send_message_client, msg=self.msgText.get_text(), to=self.chating_with)
+            self.master.update(event_pressed_send_message, msg=self.msgText.get_text(), to=self.chating_with)
 
     def msg_success(self):
         self.pending_message = False
