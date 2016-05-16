@@ -1,4 +1,3 @@
-event_login = 'login'
-event_login_result = 'login_result'
-event_register_result = 'register_result'
-event_internal_message = 'internal_message'
+event_login_result = 1
+event_register_result = 2
+event_internal_message = 3

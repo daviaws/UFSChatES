@@ -31,6 +31,7 @@ class Client(Observable):
                 break
 
     def send_command(self, cmd):
+        print('Send command "%s" to server' % cmd)
         if self.isconnected:
             encodedCommand = self.command_protocol.encode(cmd)
             self.connection.send_server(encodedCommand)
