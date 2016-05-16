@@ -3,7 +3,9 @@ from random import random
 from communication import communication_protocol
 from communication.communication_protocol import *
 
-class Server():
+from observers.observable import Observable
+
+class Server(Observable):
 
     def __init__(self, ip, port):
         self.ip = ip
@@ -35,7 +37,6 @@ class Server():
     def remove_connection(self, uid):
         self.n_connections -= 1
         user = self.uidToConnectionUser[uid]['user']
-        print(user)
         del self.uidToConnectionUser[uid]
         if user:
             del self.userToUid[user]
