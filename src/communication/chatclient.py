@@ -58,9 +58,9 @@ class Client(Observable):
             event = cmd.get_event()
             if cmd.has_args():
             	args = cmd.get_args()
-            	self.update_observers(event, result=args['result'])
-            else:
             	self.update_observers(event, **args)
+            else:
+            	self.update_observers(event)
         else:
             self.internal_msg('Command is not valid. Code: {}'.format(result))
             return communication_protocol.InvalidCommand(code=result)

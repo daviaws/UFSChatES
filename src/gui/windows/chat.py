@@ -18,8 +18,6 @@ class ChatWindow():
         self.root.title('Chat with %s' % chating_with)
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)
 
-        self.pending_message = False
-
         logTextFrame = Frame(self.root, bd=1, relief=SUNKEN)
         logTextFrame.pack(anchor=N, fill=BOTH, side=TOP)
         self.logText = TextBox(self.root)
@@ -37,23 +35,21 @@ class ChatWindow():
         sendTextButton.pack()
 
     def send_message(self):
-        if self.pending_message:
-            messagebox.showwarning('Cannot send message', 'Message pendig to %s.' % self.chating_with, parent=self.root)
-        else:
-            self.pending_message = True
-            self.master.update(event_pressed_send_message, msg=self.msgText.get_text(), to=self.chating_with)
+        msg = self.msgText.get_text()
+        if msg != '\n':
+            self.master.update(event_pressed_send_message, msg=msg, to=self.chating_with)
 
     def msg_success(self):
-        self.pending_message = False
         self.logText.log('You: %s' % self.msgText.get_text())
         self.logText.clean()
 
     def msg_received(self, msg):
-        self.pending_message = False
         self.logText.log('%s: %s' % (self.chating_with, msg))
 
+    def pending_msg(self):
+        messagebox.showwarning('Cannot send message', 'Message pendig to %s.' % self.chating_with, parent=self.root)
+
     def msg_fail(self):
-        self.pending_message = False
         messagebox.showerror('Message was not sent', 'Fail to send message to %s' % self.chating_with, parent=self.root)
 
     def center(self):

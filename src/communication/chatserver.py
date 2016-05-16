@@ -115,7 +115,7 @@ class Server():
                             result = 1
                         else:
                             result = 0
-                        return SendMessageResult(result=result)
+                        return SendMessageResult(result=result, to=to)
                     elif isinstance(cmd, AddContact):
                         contact = args['user']
                         if contact in self.registeredUsers:

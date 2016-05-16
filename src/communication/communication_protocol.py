@@ -98,7 +98,7 @@ class SendMessageResult(Command):
         else:
             super().__init__(kwargs)
         self.code = event_send_message_result
-        self.keyargs = {'result'}
+        self.keyargs = {'result', 'to'}
 
 class AddContact(Command):
     
