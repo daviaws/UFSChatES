@@ -2,16 +2,16 @@ from tkinter import *
 
 class TextBox():
 
-    def __init__(self, root, able=DISABLED):
-        if able == DISABLED:
+    def __init__(self, root, state=DISABLED):
+        if state == DISABLED:
             self.able = False
-        elif able == Normal:
+        elif state == NORMAL:
             self.able = True
         consoleFrame = Frame(root)
         consoleFrame.pack(expand=1, fill=BOTH)
         scrollbar = Scrollbar(consoleFrame)
         scrollbar.pack(fill=Y, side=RIGHT)
-        self.messages = Text(consoleFrame, background='white', bd=2, relief=SUNKEN, state=able, yscrollcommand=scrollbar.set)
+        self.messages = Text(consoleFrame, background='white', bd=2, relief=SUNKEN, state=state, yscrollcommand=scrollbar.set)
         self.messages.pack(expand=1, fill=BOTH)
         scrollbar.config(command=self.messages.yview)
 

@@ -1,15 +1,17 @@
+from datetime import datetime
+
 from tkinter import *
 import asyncio
 from functools import wraps
 
 from communication import chatclient
-from communication.communication_protocol import Register, Login
+from communication.communication_protocol import Register, Login, SendMessage
 
 from observers.observer import Observer
 from observers.gui_events import *
 from observers.model_events import *
 
-from gui.controllers.windows_manager import WindowsManager
+from controllers.windows_manager import WindowsManager
 
 from gui.windows import *
 from gui.screens import *
@@ -58,6 +60,7 @@ class Controller():
             username = kwargs['username']
             passwd = kwargs['passwd']
             self.client.send_command(Login(username=username, passwd=passwd))
+            self.username = username
         elif event == event_register:
             username = kwargs['username']
             passwd = kwargs['passwd']
@@ -75,17 +78,29 @@ class Controller():
             print('Solicited to add user: "%s"' % username)
         elif event == event_open_chat_window:
             username = kwargs['username']
-    
+            self.win_man.open(self, username)
+        elif event == event_closed_chat_window:
+            username = kwargs['username']
+            self.win_man.close(username)
+        elif event == event_send_message_client:
+            fromuser = self.username
+            to = kwargs['to']
+            date = str(datetime.now())
+            msg = kwargs['msg']
+            self.client.send_command(SendMessage(fromuser=fromuser, to=to, date=date, msg=msg))
+
     def login_result(self, result):
         if result == 2:
             self.loginScreen.log('Login: User already logged')
         elif result == 1:
             self.loginScreen.fall()
             self.loggedScreen.raises()
+            return
         elif result == 0:
             self.loginScreen.log('Login: Invalid password')
         elif result == -1:
             self.loginScreen.log('Login: Invalid user')
+        self.username = None
 
     def register_result(self, result):
         if result == 1:

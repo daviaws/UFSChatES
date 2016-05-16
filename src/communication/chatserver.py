@@ -67,6 +67,7 @@ class Server():
         print("RESULT OF PROCESS '{}'".format(messageTuple))
         response = self.exec_command(messageTuple, uid, user, logged)
         if response:
+            print(response)
             response = self.command_protocol.encode(response)
             connection.send_client(response)
 

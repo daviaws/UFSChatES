@@ -78,7 +78,7 @@ class SendMessage(Command):
             super().__init__(args)    
         else:
             super().__init__(kwargs)
-        self.keyargs = {'to', 'from', 'date', 'msg'}
+        self.keyargs = {'to', 'fromuser', 'date', 'msg'}
 
 class SendMessageResult(Command):
     
@@ -134,7 +134,7 @@ class InvalidCommand(Command):
 
 class Protocol():
 
-    REF_DICT = {'Login' : Login, 'Register' : Register, 'LoginResult' : LoginResult, 'RegisterResult' : RegisterResult}
+    REF_DICT = {'Login' : Login, 'Register' : Register, 'LoginResult' : LoginResult, 'RegisterResult' : RegisterResult, 'SendMessage' : SendMessage, 'SendMessageResult' : SendMessageResult}
 
     def encode(self, cmd):
         cmd_name = type(cmd).__name__

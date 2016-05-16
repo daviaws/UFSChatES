@@ -1,4 +1,4 @@
-from gui.controllers.controller import Controller
+from controllers.controller import Controller
 
 APP_NAME = 'UFSChat'
 

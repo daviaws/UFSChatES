@@ -63,7 +63,7 @@ class Client(Observable):
                 self.update_observers(event, result=args['result'])
         else:
             self.internal_msg('Command is not valid. Code: {}'.format(result))
-            return InvalidCommand(code=result)
+            return communication_protocol.InvalidCommand(code=result)
 
     def internal_msg(self, msg):
         print(msg)
