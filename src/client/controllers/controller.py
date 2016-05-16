@@ -11,7 +11,7 @@ from observers.observer import Observer
 from observers.gui_events import *
 from observers.model_events import *
 
-from controllers.windows_manager import WindowsManager
+from gui.controller.windows_manager import WindowsManager
 
 from gui.windows import *
 from gui.screens import *
