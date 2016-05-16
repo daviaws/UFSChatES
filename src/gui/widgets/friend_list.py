@@ -1,5 +1,7 @@
 from tkinter import *
 
+from observers.gui_events import event_open_chat_window
+
 class FriendList():
 
     def __init__(self, master, root):
@@ -55,7 +57,7 @@ class FriendList():
         self.menu.post(event.x_root, event.y_root)
 
     def chat_contact(self, contact):
-        print ("Chat with '%s'" % (contact))
+        self.master.update(event_open_chat_window, username=contact)
 
     def remove_contact(self, contact):
         print ("Remove '%s'" % (contact))

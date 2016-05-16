@@ -4,10 +4,12 @@ from functools import wraps
 
 from communication import chatclient
 from communication.communication_protocol import Register, Login
-from observers.observer import Observer
 
+from observers.observer import Observer
 from observers.gui_events import *
 from observers.model_events import *
+
+from gui.controllers.windows_manager import WindowsManager
 
 from gui.windows import *
 from gui.screens import *
@@ -26,12 +28,14 @@ def runloop(func):
 
 class Controller():
 
-    def __init__(self, app_name):
+    def __init__(self, app_name, ip, port):
         self.loop = asyncio.get_event_loop()
 
         self.connection_try = None
-        self.client = chatclient.Client(self.loop, '127.0.0.1', 8888)
+        self.client = chatclient.Client(self.loop, ip, port)
         self.client.register(self)
+
+        self.win_man = WindowsManager()
 
         self.mainWindow = main.MainWindow(app_name)
         root = self.mainWindow.get_root()
@@ -69,6 +73,8 @@ class Controller():
         elif event == event_pressed_add_contact:
             username = kwargs['username']
             print('Solicited to add user: "%s"' % username)
+        elif event == event_open_chat_window:
+            username = kwargs['username']
     
     def login_result(self, result):
         if result == 2:
