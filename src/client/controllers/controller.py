@@ -88,6 +88,9 @@ class Controller():
         elif event == event_send_message_result:
             self.send_message_result(**kwargs)
 
+        elif event == event_send_message:
+            self.received_message(**kwargs)
+
     def on_received_internal_message(self, **kwargs):
         msg = kwargs['msg']
         self.loginScreen.log(msg)
@@ -167,6 +170,16 @@ class Controller():
             self.loginScreen.log('Register: Success')
         elif result == 0:
             self.loginScreen.log('Register: User already exists')
+
+    def received_message(self, **kwargs):
+        fromuser = kwargs['fromuser']
+        to = kwargs['to']
+        date = kwargs['date']
+        msg = kwargs['msg']
+        #TODO - LOGAR EM ARQUIVO
+        self.win_man.open(self, fromuser)
+        chat_win = self.win_man.get_window(fromuser)
+        chat_win.msg_received(date, msg)
 
     @asyncio.coroutine
     def run_tk(self, root, interval=0.05):

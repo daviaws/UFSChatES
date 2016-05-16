@@ -45,7 +45,7 @@ class Server():
     def user_logged(self, uid, user):
         self.uidToConnectionUser[uid]['user'] =  user
         connection = self.uidToConnectionUser[uid]['connection']
-        self.userToUid[user] = {'uid' : uid, 'connection' : connection}
+        self.userToUid[user] = uid
         print("User '{}' logged to connection uid '{}'".format(user, uid))
 
     def user_dislogged(self, user):
@@ -108,8 +108,8 @@ class Server():
                     if isinstance(cmd, SendMessage):
                         to = args['to']
                         if to in self.userToUid:
-                            responseUID = userToUid[to]
-                            connectionToRespond = self.uidToConnectionUser[responseUID]
+                            responseUID = self.userToUid[to]
+                            connectionToRespond = self.uidToConnectionUser[responseUID]['connection']
                             encodedCommand = self.command_protocol.encode(cmd)
                             connectionToRespond.send_client(encodedCommand)
                             result = 1
