@@ -35,7 +35,7 @@ class LoginScreen():
 
         registrationFrame = Frame(self.mainFrame, bd=1, relief=SUNKEN)
         registrationFrame.pack(anchor=anchor, fill=BOTH, side=BOTTOM)
-        register = Button(registrationFrame, text='Register', command= lambda: self.master.client.send_command(event_register, username=userNameEntry.get(), passwd=userPasswdEntry.get()))
+        register = Button(registrationFrame, text='Register', command= lambda: self.master.update(event_register, username=userNameEntry.get(), passwd=userPasswdEntry.get()))
         register.pack()
 
     def raises(self):
