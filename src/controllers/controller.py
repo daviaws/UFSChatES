@@ -51,7 +51,7 @@ class Controller():
         self.loginScreen.log('Application started.')
 
     def update(self, *args, **kwargs):
-        print('Event %s with args %s' % (args, kwargs))
+        print("Event '%s' with args %s" % (args[0], kwargs))
         event = args[0]
         if event == event_internal_message:
             msg = kwargs['msg']
