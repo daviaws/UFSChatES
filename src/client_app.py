@@ -1,4 +1,4 @@
-from client.controllers.controller import Controller
+from client.controller import Controller
 
 APP_NAME = 'UFSChat'
 
