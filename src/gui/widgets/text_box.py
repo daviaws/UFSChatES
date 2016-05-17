@@ -26,7 +26,9 @@ class TextBox():
             self.messages.see(END)
 
     def get_text(self):
-        return self.messages.get("1.0",END)
+        text = self.messages.get("1.0",END)
+        text = text[:-1]
+        return text
 
     def clean(self):
         if self.able:

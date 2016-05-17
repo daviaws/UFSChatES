@@ -33,6 +33,8 @@ def runloop(func):
 class Controller(Observer):
 
     def __init__(self, app_name, ip, port):
+        self.username = None
+
         self.loop = asyncio.get_event_loop()
 
         self.connection_try = None
@@ -124,14 +126,14 @@ class Controller(Observer):
     def send_message(self, **kwargs):
         fromuser = self.username
         to = kwargs['to']
-        date = str(datetime.now())
+        date = str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
         msg = kwargs['msg']
         if self.msg_man.has_pending_msg(to):
             chat_win = self.win_man.get_window(to)
             if chat_win:
                 chat_win.pending_msg()
         else:
-            self.msg_man.add_pending(to, msg)
+            self.msg_man.add_pending(to, msg, date)
             self.client.send_command(SendMessage(fromuser=fromuser, to=to, date=date, msg=msg))
 
     def send_message_result(self, **kwargs):
@@ -139,11 +141,13 @@ class Controller(Observer):
         to = kwargs['to']
         if result == 1:
             #TODO - SAVE IN FILE ON SUCCESS
-            msg = self.msg_man.get_msg(to)
+            msg_result = self.msg_man.get_msg(to)
+            msg = msg_result['msg']
+            date = msg_result['date']
             self.msg_man.remove_pending(to)
             chat_win = self.win_man.get_window(to)
             if chat_win:
-                chat_win.msg_success()
+                chat_win.msg_success(self.username, date)
         elif result == 0:
             self.msg_man.remove_pending(to)
             chat_win = self.win_man.get_window(to)

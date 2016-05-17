@@ -11,12 +11,12 @@ class MessageManager():
 
 	def get_msg(self, to):
 		if to in self.pending_messages:
-			self.pending_messages[to]
+			return self.pending_messages[to]
 		else:
 			return None
 
-	def add_pending(self, to, msg):
-		self.pending_messages[to] = msg
+	def add_pending(self, to, msg, date):
+		self.pending_messages[to] = {'msg' : msg, 'date' : date}
 
 	def remove_pending(self, to):
 		del self.pending_messages[to]

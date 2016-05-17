@@ -36,12 +36,12 @@ class ChatWindow():
 
     def send_message(self):
         msg = self.msgText.get_text()
-        if msg != '\n':
+        if msg:
             self.master.update(event_pressed_send_message, msg=msg, to=self.chating_with)
 
-    def msg_success(self):
-        self.logText.log('You: %s' % self.msgText.get_text())
-        self.logText.clean()
+    def msg_success(self, user, date):
+        self.logText.log('%s - %s: %s' % (date, user, self.msgText.get_text()))
+        self.msgText.clean()
 
     def msg_received(self, date, msg):
         self.logText.log('%s - %s: %s' % (date, self.chating_with, msg))
@@ -67,5 +67,4 @@ class ChatWindow():
 
     def raises(self):
         self.root.withdraw()
-        self.center()
         self.root.deiconify()
