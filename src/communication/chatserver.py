@@ -77,9 +77,11 @@ class Server(Observable):
         if result == communication_protocol.OK:
             cmd = messageTuple[1]
             date = messageTuple[2]
+            cmd_type = type(cmd)
             args = cmd.get_args()
             print("'{}' parameteres {}".format(cmd, args))
-            if   isinstance(cmd, Login):
+
+            if cmd_type == Login:
                 username = args['username']
                 passwd = args['passwd']
                 if not username in self.userToUid:
@@ -95,7 +97,7 @@ class Server(Observable):
                 else:
                     result = 2
                 return LoginResult(result=result)
-            elif isinstance(cmd, Register):
+            elif cmd_type == Register:
                 username = args['username']
                 passwd = args['passwd']
                 if username in self.registeredUsers:
@@ -106,7 +108,7 @@ class Server(Observable):
                 return RegisterResult(result=result)
             else:
                 if logged:
-                    if isinstance(cmd, SendMessage):
+                    if cmd_type == Message:
                         to = args['to']
                         if to in self.userToUid:
                             responseUID = self.userToUid[to]
@@ -116,8 +118,8 @@ class Server(Observable):
                             result = 1
                         else:
                             result = 0
-                        return SendMessageResult(result=result, to=to)
-                    elif isinstance(cmd, AddContact):
+                        return MessageResult(result=result, to=to)
+                    elif cmd_type == AddContact:
                         contact = args['user']
                         if contact in self.registeredUsers:
                             if user in self.userToContacts[user]:
@@ -128,7 +130,7 @@ class Server(Observable):
                         else:
                             result = 0
                         return AddContactResult(result=result)
-                    elif isinstance(cmd, GetContacts):
+                    elif cmd_type == GetContacts:
                         if user in self.userToContacts:
                             result = self.userToContacts[user]
                         else:

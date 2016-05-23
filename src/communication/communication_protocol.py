@@ -2,7 +2,6 @@ import base64
 import json
 from datetime import datetime
 from copy import deepcopy
-from observers.model_events import *
 
 OK = 0
 DATETIME_NONE = 1
@@ -12,20 +11,23 @@ CMD_ARGS_INVALID = 4
 ERROR_DECODING = 5
 
 class Command():
-
-    def __init__(self, args=None):
-        self.args = args
+    def __init__(self, *args, **kwargs):
+        self.args = {}
+        if kwargs:
+            for key in kwargs:
+                self.args[key] = kwargs[key]
         self.date = None
-        self.code = None
         self.keyargs = set()
+
+    def add_args(self, **kwargs):
+        if kwargs:
+            for key in kwargs:
+                self.args[key] = kwargs[key]
 
     def has_args(self):
         if self.args:
             return True
         return False
-
-    def get_event(self):
-        return self.code
 
     def get_args(self):
         return deepcopy(self.args)
@@ -39,117 +41,87 @@ class Command():
     def __repr__(self):
         return "Type Command > '{}'".format(type(self).__name__)
 
-
+#Chat
 class Register(Command):
-    
-    def __init__(self, args=None, **kwargs):
-        if args:
-            super().__init__(args)    
-        else:
-            super().__init__(kwargs)
-        self.code = event_register
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.keyargs = {'username', 'passwd'}
 
 class RegisterResult(Command):
-    
-    def __init__(self, args=None, **kwargs):
-        if args:
-            super().__init__(args)    
-        else:
-            super().__init__(kwargs)
-        self.code = event_register_result
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.keyargs = {'result'}
-
+        
 class Login(Command):
-    
-    def __init__(self, args=None, **kwargs):
-        if args:
-            super().__init__(args)    
-        else:
-            super().__init__(kwargs)
-        self.code = event_login
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.keyargs = {'username', 'passwd'}
 
 class LoginResult(Command):
-    
-    def __init__(self, args=None, **kwargs):
-        if args:
-            super().__init__(args)    
-        else:
-            super().__init__(kwargs)
-        self.code = event_login_result
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.keyargs = {'result'}
 
-class SendMessage(Command):
-    
-    def __init__(self, args=None, **kwargs):
-        if args:
-            super().__init__(args)    
-        else:
-            super().__init__(kwargs)
-        self.code = event_send_message
+class Message(Command):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.keyargs = {'to', 'fromuser', 'date', 'msg'}
 
-class SendMessageResult(Command):
-    
-    def __init__(self, args=None, **kwargs):
-        if args:
-            super().__init__(args)    
-        else:
-            super().__init__(kwargs)
-        self.code = event_send_message_result
+class MessageResult(Command):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.keyargs = {'result', 'to'}
 
-class AddContact(Command):
-    
-    def __init__(self, args=None, **kwargs):
-        if args:
-            super().__init__(args)    
-        else:
-            super().__init__(kwargs)
-        self.code = event_add_contact
-        self.keyargs = {'user'}
-
-class AddContactResult(Command):
-    
-    def __init__(self, args=None, **kwargs):
-        if args:
-            super().__init__(args)    
-        else:
-            super().__init__(kwargs)
-        self.code = event_add_contact_result
-        self.keyargs = {'result'}
-
 class GetContacts(Command):
-    
-    def __init__(self, args=None, **kwargs):
-        if args:
-            super().__init__(args)    
-        else:
-            super().__init__(kwargs)
-        self.code = event_get_contacts
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
 class GetContactsResult(Command):
-    
-    def __init__(self, args=None, **kwargs):
-        if args:
-            super().__init__(args)    
-        else:
-            super().__init__(kwargs)
-        self.code = event_get_contacts_result
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
+class AddContact(Command):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)        
+        self.keyargs = {'username'}
+
+class AddContactResult(Command):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.keyargs = {'result'}
+
+#GUI BIND EVENTS
+class InternalMessage(Command):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.keyargs = {'msg'}
+
+class PopupAddContact(Command):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+class OpenChat(Command):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+class CloseChat(Command):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+#INVALID
 class InvalidCommand(Command):
-
-    def __init__(self, args=None, **kwargs):
-        if args:
-            super().__init__(args)    
-        else:
-            super().__init__(kwargs)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.keyargs = {'code'}
 
 class Protocol():
 
-    REF_DICT = {'Login' : Login, 'Register' : Register, 'LoginResult' : LoginResult, 'RegisterResult' : RegisterResult, 'SendMessage' : SendMessage, 'SendMessageResult' : SendMessageResult}
+    REF_DICT = {
+    'Login' : Login, 'LoginResult' : LoginResult, 'Register' : Register,
+    'RegisterResult' : RegisterResult, 'Message' : Message, 'MessageResult' : MessageResult,
+    'PopupAddContact' : PopupAddContact, 'AddContact' : AddContact, 'AddContactResult' : AddContactResult,
+    'InvalidCommand' : InvalidCommand, 'InternalMessage' : InternalMessage,
+    }
 
     def encode(self, cmd):
         cmd_name = type(cmd).__name__
@@ -174,7 +146,7 @@ class Protocol():
                     if decodedCommand['cmd'] in self.REF_DICT:
                         cmd = self.REF_DICT[decodedCommand['cmd']]
                         if 'params' in decodedCommand:
-                            cmd = cmd(decodedCommand['params'])
+                            cmd = cmd(**decodedCommand['params'])
                         else:
                             cmd = cmd()
                         

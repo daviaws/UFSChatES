@@ -1,8 +1,7 @@
 import asyncio
 import time
-from communication import communication_protocol
+from communication.communication_protocol import *
 from observers.observable import Observable
-from observers.model_events import *
 
 class Client(Observable):
 
@@ -13,7 +12,7 @@ class Client(Observable):
         self.loop = loop
         self.connection = None
         self.isconnected = False
-        self.command_protocol = communication_protocol.Protocol()
+        self.command_protocol = Protocol()
 
     @asyncio.coroutine
     def try_to_connect(self):
@@ -50,24 +49,19 @@ class Client(Observable):
         messageTuple = self.command_protocol.decode(data)
         print("RESULT OF PROCCESS '{}'".format(messageTuple))
         result = messageTuple[0]
-        if result == communication_protocol.OK:
+        if result == OK:
             cmd = messageTuple[1]
             date = messageTuple[2]
             args = cmd.get_args()
             print("'{}' parameteres {}".format(cmd, args))
-            event = cmd.get_event()
-            if cmd.has_args():
-            	args = cmd.get_args()
-            	self.update_observers(event, **args)
-            else:
-            	self.update_observers(event)
+            self.update_observers(cmd)
         else:
             self.internal_msg('Command is not valid. Code: {}'.format(result))
-            return communication_protocol.InvalidCommand(code=result)
+            return InvalidCommand(code=result)
 
     def internal_msg(self, msg):
-        event = event_internal_message
-        self.update_observers(event, msg=msg)
+        cmd = InternalMessage(msg=msg)
+        self.update_observers(cmd)
 
 class ClientConnection(asyncio.Protocol):
 

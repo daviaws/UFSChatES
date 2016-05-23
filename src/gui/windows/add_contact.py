@@ -1,6 +1,6 @@
 from tkinter import *
 
-from observers.gui_events import event_pressed_add_contact
+from communication.communication_protocol import AddContact
 
 class AddContactWindow():
     
@@ -24,8 +24,12 @@ class AddContactWindow():
         addContactLabel.pack()
         self.addContactEntry = Entry(addContactFrame)
         self.addContactEntry.pack()
-        addContactButton = Button(addContactFrame, text='Add', command= lambda: self.master.update(event_pressed_add_contact, username=self.get_entry()))
+        addContactButton = Button(addContactFrame, text='Add', command=self.add_contact)
         addContactButton.pack()
+
+    def add_contact(self):
+        cmd = AddContact(username=self.get_entry())
+        self.master.update(cmd)
 
     def center(self):
         self.root.update_idletasks()

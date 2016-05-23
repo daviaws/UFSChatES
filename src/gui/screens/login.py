@@ -1,6 +1,7 @@
 from tkinter import *
 
-from observers.gui_events import event_pressed_send_login, event_pressed_send_register
+from communication.communication_protocol import Login, Register
+#from observers.gui_events import event_pressed_send_login, event_pressed_send_register
 from gui.widgets.text_box import TextBox
 
 class LoginScreen():
@@ -28,14 +29,14 @@ class LoginScreen():
 
         buttonFrame = Frame(loginFrame, height=2, bd=1, relief=SUNKEN)
         buttonFrame.pack(fill=Y)
-        login = Button(buttonFrame, text='Login', command= lambda: self.master.update(event_pressed_send_login, username=userNameEntry.get(), passwd=userPasswdEntry.get()))
+        login = Button(buttonFrame, text='Login', command= lambda: self.master.update(Login(username=userNameEntry.get(), passwd=userPasswdEntry.get())))
         login.pack()
 
         self.messages = TextBox(self.mainFrame)
 
         registrationFrame = Frame(self.mainFrame, bd=1, relief=SUNKEN)
         registrationFrame.pack(anchor=anchor, fill=BOTH, side=BOTTOM)
-        register = Button(registrationFrame, text='Register', command= lambda: self.master.update(event_pressed_send_register, username=userNameEntry.get(), passwd=userPasswdEntry.get()))
+        register = Button(registrationFrame, text='Register', command= lambda: self.master.update(Register(username=userNameEntry.get(), passwd=userPasswdEntry.get())))
         register.pack()
 
     def raises(self):

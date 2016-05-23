@@ -1,6 +1,7 @@
 from tkinter import *
 
-from observers.gui_events import event_open_chat_window
+from communication.communication_protocol import OpenChat
+#from observers.gui_events import event_open_chat_window
 
 class FriendList():
 
@@ -57,7 +58,8 @@ class FriendList():
         self.menu.post(event.x_root, event.y_root)
 
     def chat_contact(self, contact):
-        self.master.update(event_open_chat_window, username=contact)
+        cmd = OpenChat(username=contact)
+        self.master.update(cmd)
 
     def remove_contact(self, contact):
         print ("Remove '%s'" % (contact))

@@ -2,7 +2,7 @@ from tkinter import *
 from tkinter import messagebox
 
 from gui.widgets.text_box import TextBox
-from observers.gui_events import event_pressed_send_message, event_closed_chat_window
+from communication.communication_protocol import Message, CloseChat
 
 class ChatWindow():
     
@@ -37,7 +37,8 @@ class ChatWindow():
     def send_message(self):
         msg = self.msgText.get_text()
         if msg:
-            self.master.update(event_pressed_send_message, msg=msg, to=self.chating_with)
+            cmd = Message(msg=msg, to=self.chating_with)
+            self.master.update(cmd)
 
     def msg_success(self, user, date):
         self.logText.log('%s - %s: %s' % (date, user, self.msgText.get_text()))
@@ -62,7 +63,8 @@ class ChatWindow():
         self.root.geometry("%dx%d+%d+%d" % (size + (x, y)))
 
     def on_close(self):
-        self.master.update(event_closed_chat_window, username=self.chating_with)
+        cmd = CloseChat(username=self.chating_with)
+        self.master.update(cmd)
         self.root.destroy()
 
     def raises(self):

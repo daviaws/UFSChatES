@@ -1,7 +1,0 @@
-event_pressed_send_login = 'pressed_send_login'
-event_pressed_send_register = 'pressed_send_register'
-event_pressed_add_contact = 'pressed_add_contact'
-event_pressed_send_message = 'pressed_send_message'
-event_popup_add_contact = 'popup_add_contact'
-event_open_chat_window = 'open_chat_window'
-event_closed_chat_window = 'closed_chat_window'

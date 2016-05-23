@@ -6,11 +6,9 @@ import asyncio
 from functools import wraps
 
 from communication import chatclient
-from communication.communication_protocol import Register, Login, SendMessage
+from communication.communication_protocol import *
 
 from observers.observer import Observer
-from observers.gui_events import *
-from observers.model_events import *
 
 from client.message_manager import MessageManager
 from gui.controller.windows_manager import WindowsManager
@@ -55,90 +53,97 @@ class Controller(Observer):
         self.loginScreen.log('Application started.')
 
     def update(self, *args, **kwargs):
-        print("Event '%s' with args %s" % (args[0], kwargs))
-        event = args[0]
-        if event == event_internal_message:
-            self.on_received_internal_message(**kwargs)
-        
-        elif event == event_pressed_send_login:
-            self.on_pressed_send_login(**kwargs)
-        
-        elif event == event_pressed_send_register:
-            self.on_pressed_send_register(**kwargs)
-        
-        elif event == event_login_result:
-            self.login_result(**kwargs)
-        
-        elif event == event_register_result:
-            self.register_result(**kwargs)
-        
-        elif event == event_popup_add_contact:
-            self.popup_add_contact()
-        
-        elif event == event_pressed_add_contact:
-            self.on_pressed_add_contact(**kwargs)
-        
-        elif event == event_open_chat_window:
-            self.on_open_chat_window(**kwargs)
-        
-        elif event == event_closed_chat_window:
-            self.on_close_chat_window(**kwargs)
-        
-        elif event == event_pressed_send_message:
-            self.send_message(**kwargs)
+        cmd = args[0]
+        event = type(cmd)
 
-        elif event == event_send_message_result:
-            self.send_message_result(**kwargs)
+        if event == InternalMessage:
+            self.on_received_internal_message(cmd)
+        
+        elif event == Login:
+            self.on_pressed_send_login(cmd)
+        
+        elif event == Register:
+            self.on_pressed_send_register(cmd)
+        
+        elif event == LoginResult:
+            self.login_result(cmd)
+        
+        elif event == RegisterResult:
+            self.register_result(cmd)
+        
+        elif event == PopupAddContact:
+            self.popup_add_contact(cmd)
+        
+        elif event == AddContact:
+            self.on_pressed_add_contact(cmd)
+        
+        elif event == OpenChat:
+            self.on_open_chat_window(cmd)
+        
+        elif event == CloseChat:
+            self.on_close_chat_window(cmd)
+        
+        elif event == Message:
+            arguments = cmd.get_args()
+            to = arguments['to']
+            if self.username == to:
+                self.received_message(cmd)
+            else:
+                self.send_message(cmd)
 
-        elif event == event_send_message:
-            self.received_message(**kwargs)
+        elif event == MessageResult:
+            self.send_message_result(cmd)
 
-    def on_received_internal_message(self, **kwargs):
-        msg = kwargs['msg']
+    def on_received_internal_message(self, cmd):
+        arguments = cmd.get_args()
+        msg = arguments['msg']
         self.loginScreen.log(msg)
 
-    def on_pressed_send_login(self, **kwargs):
-        username = kwargs['username']
-        passwd = kwargs['passwd']
-        self.client.send_command(Login(username=username, passwd=passwd))
-        self.username = username
+    def on_pressed_send_login(self, cmd):
+        arguments = cmd.get_args()
+        self.username = arguments['username']
+        self.client.send_command(cmd)
 
-    def on_pressed_send_register(self, **kwargs):
-        username = kwargs['username']
-        passwd = kwargs['passwd']
-        self.client.send_command(Register(username=username, passwd=passwd))
+    def on_pressed_send_register(self, cmd):
+        self.client.send_command(cmd)
 
-    def popup_add_contact(self, **kwargs):
+    def popup_add_contact(self, cmd):
         self.addContactWindow.raises()
 
-    def on_pressed_add_contact(self, **kwargs):
-        username = kwargs['username']
+    def on_pressed_add_contact(self, cmd):
+        arguments = cmd.get_args()
+        username = arguments['username']
         print('Solicited to add user: "%s"' % username)
 
-    def on_open_chat_window(self, **kwargs):
-        username = kwargs['username']
+    def on_open_chat_window(self, cmd):
+        arguments = cmd.get_args()
+        username = arguments['username']
         self.win_man.open(self, username)
 
-    def on_close_chat_window(self, **kwargs):
-        username = kwargs['username']
+    def on_close_chat_window(self, cmd):
+        arguments = cmd.get_args()
+        username = arguments['username']
         self.win_man.close(username)      
 
-    def send_message(self, **kwargs):
+    def send_message(self, cmd):
+        arguments = cmd.get_args()
+        to = arguments['to']
+        msg = arguments['msg']
         fromuser = self.username
-        to = kwargs['to']
         date = str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-        msg = kwargs['msg']
+        cmd.add_args(fromuser=fromuser, date=date)
         if self.msg_man.has_pending_msg(to):
             chat_win = self.win_man.get_window(to)
             if chat_win:
                 chat_win.pending_msg()
         else:
             self.msg_man.add_pending(to, msg, date)
-            self.client.send_command(SendMessage(fromuser=fromuser, to=to, date=date, msg=msg))
+            self.client.send_command(cmd)
 
-    def send_message_result(self, **kwargs):
-        result = kwargs['result']
-        to = kwargs['to']
+    def send_message_result(self, cmd):
+        arguments = cmd.get_args()
+        result = arguments['result']
+        to = arguments['to']
         if result == 1:
             #TODO - SAVE IN FILE ON SUCCESS
             msg_result = self.msg_man.get_msg(to)
@@ -154,8 +159,9 @@ class Controller(Observer):
             if chat_win:
                 chat_win.msg_fail()
 
-    def login_result(self, **kwargs):
-        result = kwargs['result']
+    def login_result(self, cmd):
+        arguments = cmd.get_args()
+        result = arguments['result']
         if result == 2:
             self.loginScreen.log('Login: User already logged')
         elif result == 1:
@@ -168,18 +174,20 @@ class Controller(Observer):
             self.loginScreen.log('Login: Invalid user')
         self.username = None
 
-    def register_result(self, **kwargs):
-        result = kwargs['result']
+    def register_result(self, cmd):
+        arguments = cmd.get_args()
+        result = arguments['result']
         if result == 1:
             self.loginScreen.log('Register: Success')
         elif result == 0:
             self.loginScreen.log('Register: User already exists')
 
-    def received_message(self, **kwargs):
-        fromuser = kwargs['fromuser']
-        to = kwargs['to']
-        date = kwargs['date']
-        msg = kwargs['msg']
+    def received_message(self, cmd):
+        arguments = cmd.get_args()
+        fromuser = arguments['fromuser']
+        to = arguments['to']
+        date = arguments['date']
+        msg = arguments['msg']
         #TODO - LOGAR EM ARQUIVO
         self.win_man.open(self, fromuser)
         chat_win = self.win_man.get_window(fromuser)

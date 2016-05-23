@@ -1,6 +1,6 @@
 from tkinter import *
 
-from observers.gui_events import event_popup_add_contact
+from communication.communication_protocol import PopupAddContact
 from gui.widgets.friend_list import FriendList
 
 class LoggedScreen():
@@ -13,7 +13,7 @@ class LoggedScreen():
         loggedFrame = Frame(self.mainFrame, bd=1, relief=SUNKEN)
         loggedFrame.pack(expand=True, fill=BOTH)
 
-        login = Button(loggedFrame, text='Add contact', command= lambda: self.master.update(event_popup_add_contact))
+        login = Button(loggedFrame, text='Add contact', command= lambda: self.master.update(PopupAddContact()))
         login.pack()
 
         onlineFrame = Frame(loggedFrame, bd=1, relief=SUNKEN)
