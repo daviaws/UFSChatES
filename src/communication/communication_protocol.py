@@ -120,7 +120,8 @@ class Protocol():
     'Login' : Login, 'LoginResult' : LoginResult, 'Register' : Register,
     'RegisterResult' : RegisterResult, 'Message' : Message, 'MessageResult' : MessageResult,
     'PopupAddContact' : PopupAddContact, 'AddContact' : AddContact, 'AddContactResult' : AddContactResult,
-    'InvalidCommand' : InvalidCommand, 'InternalMessage' : InternalMessage,
+    'InvalidCommand' : InvalidCommand, 'InternalMessage' : InternalMessage, 'GetContacts' : GetContacts,
+    'GetContactsResult' : GetContactsResult
     }
 
     def encode(self, cmd):

@@ -104,6 +104,7 @@ class Server(Observable):
                     result = 0
                 else:
                     self.registeredUsers[username] = passwd
+                    self.userToContacts[username] = []
                     result = 1
                 return RegisterResult(result=result)
             else:
@@ -120,22 +121,26 @@ class Server(Observable):
                             result = 0
                         return MessageResult(result=result, to=to)
                     elif cmd_type == AddContact:
-                        contact = args['user']
+                        contact = args['username']
+                        result = -2
                         if contact in self.registeredUsers:
-                            if user in self.userToContacts[user]:
-                                self.userToContacts[user].append(contact)
-                            else:
-                                self.userToContacts[user] = [contact]
-                            result = 1
-                        else:
-                            result = 0
+                            result = -1
+                            if contact != user:
+                                result = 0
+                                if not contact in self.userToContacts[user]:
+                                    self.userToContacts[user].append(contact)
+                                    result = 1
                         return AddContactResult(result=result)
                     elif cmd_type == GetContacts:
-                        if user in self.userToContacts:
-                            result = self.userToContacts[user]
-                        else:
-                            result = []
-                        return GetContactsResult(result=result)
+                        result = self.userToContacts[user]
+                        online_list = []
+                        offline_list = []
+                        for item in result:
+                            if item in self.userToUid:
+                                online_list.append(item)
+                            else:
+                                offline_list.append(item)
+                        return GetContactsResult(online=sorted(online_list), offline=sorted(offline_list))
                 else:
                     print('Ignoring command {} cause connection is dislogged.'.format())
         else:

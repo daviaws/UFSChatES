@@ -1,4 +1,5 @@
 from tkinter import *
+from tkinter import messagebox
 
 from communication.communication_protocol import AddContact
 
@@ -31,6 +32,15 @@ class AddContactWindow():
         cmd = AddContact(username=self.get_entry())
         self.master.update(cmd)
 
+    def already_added(self):
+        messagebox.showwarning('Result', 'User already in friend list.', parent=self.root)
+
+    def dont_exist(self):
+        messagebox.showwarning('Result', "User don't exist.", parent=self.root)
+
+    def added_self(self):
+        messagebox.showerror('Result', 'Cannot add yourself.', parent=self.root)
+
     def center(self):
         self.root.update_idletasks()
         w = self.root.winfo_screenwidth()
@@ -42,7 +52,6 @@ class AddContactWindow():
 
     def get_entry(self):
         entry = self.addContactEntry.get()
-        self.clear()
         print('Entry is %s' % entry)
         return entry
 

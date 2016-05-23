@@ -39,6 +39,8 @@ class Controller(Observer):
         self.client = chatclient.Client(self.loop, ip, port)
         self.client.register(self)
 
+        self.get_contacts_call_later = None
+
         self.win_man = WindowsManager()
         self.msg_man = MessageManager()
 
@@ -77,6 +79,9 @@ class Controller(Observer):
         elif event == AddContact:
             self.on_pressed_add_contact(cmd)
         
+        elif event == AddContactResult:
+            self.add_contact_result(cmd)
+
         elif event == OpenChat:
             self.on_open_chat_window(cmd)
         
@@ -93,6 +98,17 @@ class Controller(Observer):
 
         elif event == MessageResult:
             self.send_message_result(cmd)
+
+        elif event == GetContactsResult:
+            self.received_contacts_lists(cmd)
+
+    def when_online(self):        
+        self.get_contacts_routine()
+
+    def get_contacts_routine(self):
+        cmd = GetContacts()
+        self.client.send_command(cmd)
+        self.get_contacts_call_later = self.loop.call_later(5, self.get_contacts_routine)
 
     def on_received_internal_message(self, cmd):
         arguments = cmd.get_args()
@@ -112,8 +128,7 @@ class Controller(Observer):
 
     def on_pressed_add_contact(self, cmd):
         arguments = cmd.get_args()
-        username = arguments['username']
-        print('Solicited to add user: "%s"' % username)
+        self.client.send_command(cmd)
 
     def on_open_chat_window(self, cmd):
         arguments = cmd.get_args()
@@ -167,6 +182,7 @@ class Controller(Observer):
         elif result == 1:
             self.loginScreen.fall()
             self.loggedScreen.raises()
+            self.when_online()
             return
         elif result == 0:
             self.loginScreen.log('Login: Invalid password')
@@ -192,6 +208,24 @@ class Controller(Observer):
         self.win_man.open(self, fromuser)
         chat_win = self.win_man.get_window(fromuser)
         chat_win.msg_received(date, msg)
+
+    def received_contacts_lists(self, cmd):
+        arguments = cmd.get_args()
+        online_list = arguments['online']
+        offline_list = arguments['offline']
+        self.loggedScreen.reload_lists(online_list, offline_list)
+
+    def add_contact_result(self, cmd):
+        arguments = cmd.get_args()
+        result = arguments['result']
+        if result == 1:
+            self.addContactWindow.clear()
+        elif result == 0:
+            self.addContactWindow.already_added()
+        elif result == -1:
+            self.addContactWindow.added_self()
+        elif result == -2:
+            self.addContactWindow.dont_exist()
 
     @asyncio.coroutine
     def run_tk(self, root, interval=0.05):
