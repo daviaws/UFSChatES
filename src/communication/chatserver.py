@@ -43,6 +43,21 @@ class Server(Observable):
         print("Connection from uid '{}' was removed".format(uid))
         print("Number of connections is '{}'".format(self.n_connections))
 
+    def login_user(self, uid, username, password):
+        if not username in self.userToUid:
+            if username in self.registeredUsers:
+                userpass = self.registeredUsers[username]
+                if password == userpass:
+                    self.user_logged(uid, username)
+                    result = 1
+                else:
+                    result = 0
+            else:
+                result = -1
+        else:
+            result = 2
+        return LoginResult(result=result)
+
     def user_logged(self, uid, user):
         self.uidToConnectionUser[uid]['user'] =  user
         connection = self.uidToConnectionUser[uid]['connection']
@@ -54,6 +69,49 @@ class Server(Observable):
         del self.userToUid[user]
         self.uidToConnectionUser[uid]['user'] =  None
         print("User '{}' dislogged from connection uid '{}'".format(user, uid))
+
+    def register_user(self, username, password):
+        if username in self.registeredUsers:
+            result = 0
+        else:
+            self.registeredUsers[username] = password
+            self.userToContacts[username] = []
+            result = 1
+        return RegisterResult(result=result)
+
+    def send_message(self, cmd):
+        toUser = args['to']
+        if toUser in self.userToUid:
+            responseUID = self.userToUid[toUser]
+            connectionToRespond = self.uidToConnectionUser[responseUID]['connection']
+            encodedCommand = self.command_protocol.encode(cmd)
+            connectionToRespond.send_client(encodedCommand)
+            result = 1
+        else:
+            result = 0
+        return MessageResult(result=result, to=toUser)
+
+    def add_contact(self, user, contact):
+        result = -2
+        if contact in self.registeredUsers:
+            result = -1
+            if contact != user:
+                result = 0
+                if not contact in self.userToContacts[user]:
+                    self.userToContacts[user].append(contact)
+                    result = 1
+        return AddContactResult(result=result)
+
+    def get_contacts(self):
+        contacts = self.userToContacts[user]
+        online_list = []
+        offline_list = []
+        for item in contacts:
+            if item in self.userToUid:
+                online_list.append(item)
+            else:
+                offline_list.append(item)
+        return GetContactsResult(online=sorted(online_list), offline=sorted(offline_list))        
 
     def process_data(self, uid, data):
         user = self.uidToConnectionUser[uid]['user']
@@ -72,81 +130,38 @@ class Server(Observable):
             response = self.command_protocol.encode(response)
             connection.send_client(response)
 
-    def exec_command(self, messageTuple, uid, user, logged):
-        result = messageTuple[0]
-        if result == communication_protocol.OK:
-            cmd = messageTuple[1]
-            date = messageTuple[2]
-            cmd_type = type(cmd)
-            args = cmd.get_args()
-            print("'{}' parameteres {}".format(cmd, args))
-
-            if cmd_type == Login:
-                username = args['username']
-                passwd = args['passwd']
-                if not username in self.userToUid:
-                    if username in self.registeredUsers:
-                        userpass = self.registeredUsers[username]
-                        if passwd == userpass:
-                            self.user_logged(uid, username)
-                            result = 1
-                        else:
-                            result = 0
-                    else:
-                        result = -1
-                else:
-                    result = 2
-                return LoginResult(result=result)
-            elif cmd_type == Register:
-                username = args['username']
-                passwd = args['passwd']
-                if username in self.registeredUsers:
-                    result = 0
-                else:
-                    self.registeredUsers[username] = passwd
-                    self.userToContacts[username] = []
-                    result = 1
-                return RegisterResult(result=result)
-            else:
-                if logged:
-                    if cmd_type == Message:
-                        to = args['to']
-                        if to in self.userToUid:
-                            responseUID = self.userToUid[to]
-                            connectionToRespond = self.uidToConnectionUser[responseUID]['connection']
-                            encodedCommand = self.command_protocol.encode(cmd)
-                            connectionToRespond.send_client(encodedCommand)
-                            result = 1
-                        else:
-                            result = 0
-                        return MessageResult(result=result, to=to)
-                    elif cmd_type == AddContact:
-                        contact = args['username']
-                        result = -2
-                        if contact in self.registeredUsers:
-                            result = -1
-                            if contact != user:
-                                result = 0
-                                if not contact in self.userToContacts[user]:
-                                    self.userToContacts[user].append(contact)
-                                    result = 1
-                        return AddContactResult(result=result)
-                    elif cmd_type == GetContacts:
-                        result = self.userToContacts[user]
-                        online_list = []
-                        offline_list = []
-                        for item in result:
-                            if item in self.userToUid:
-                                online_list.append(item)
-                            else:
-                                offline_list.append(item)
-                        return GetContactsResult(online=sorted(online_list), offline=sorted(offline_list))
-                else:
-                    print('Ignoring command {} cause connection is dislogged.'.format())
-        else:
+    def exec_command(self, messageTuple, uid, user, logged): 
+        result = messageTuple[0]                             
+        if result != communication_protocol.OK:
             print('Command is not valid. Code: {}'.format(result))
             return InvalidCommand(code=result)
 
+        cmd = messageTuple[1]
+        date = messageTuple[2]
+        cmd_type = type(cmd)
+        args = cmd.get_args()
+        print("'{}' parameteres {}".format(cmd, args))
+
+        if cmd_type == Login:
+            username = args['username']
+            password = args['passwd']
+            return login_user(uid, username, password)
+        
+        if cmd_type == Register:
+            username = args['username']
+            password = args['passwd']
+            return register_user(username, password)
+        
+        if logged:
+            if cmd_type == Message:
+                return send_message(cmd)
+            elif cmd_type == AddContact:
+                contact = args['username']
+                return add_contact(user, contact)
+            elif cmd_type == GetContacts:
+                return get_contacts()
+        else:
+            print('Ignoring command {} cause connection is dislogged.'.format())
 
     def run(self):
         coroutine = self.loop.create_server(lambda: ServerConnection(self), self.ip, self.port)
