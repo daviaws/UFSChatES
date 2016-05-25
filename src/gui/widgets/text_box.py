@@ -38,7 +38,7 @@ class TextBox():
             self.messages.delete(1.0, END)
             self.messages.config(state=DISABLED)
 
-    def able(self):
+    def enable(self):
         self.able = True
         self.messages.config(state=NORMAL)
 
