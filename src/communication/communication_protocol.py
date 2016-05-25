@@ -141,31 +141,30 @@ class Protocol():
             decodedCommand = base64.b64decode(data)
             decodedCommand = decodedCommand.decode('ascii')
             decodedCommand = json.loads(decodedCommand)
-            if 'datetime' in decodedCommand:
-                datetime = decodedCommand['datetime']
-                if 'cmd' in decodedCommand:
-                    if decodedCommand['cmd'] in self.REF_DICT:
-                        cmd = self.REF_DICT[decodedCommand['cmd']]
-                        if 'params' in decodedCommand:
-                            cmd = cmd(**decodedCommand['params'])
-                        else:
-                            cmd = cmd()
-                        
-                        if cmd.validate():
-                            return (OK, cmd, datetime)
-                        else:
-                            print("Command is incompatible with '{}'".format(cmd))
-                            return (CMD_ARGS_INVALID,)
-                    else:
-                        print('OPSSS, invalid command D:')
-                        return (CMD_INVALID,)
-                else:
-                    print('OPSSS, I dont have a command... D:')
-                    return (CMD_NONE,)
-            else:
+            if 'datetime' not in decodedCommand:
                 print('OPSSS, I dont have a date... D:')
                 return (DATETIME_NONE,)
-            print(decodedCommand)
+
+            if 'cmd' not in decodedCommand:
+                print('OPSSS, I dont have a command... D:')
+                return (CMD_NONE,)
+
+            datetime = decodedCommand['datetime']
+            cmd = self.REF_DICT[decodedCommand['cmd']]
+            if decodedCommand['cmd'] in self.REF_DICT:
+                if 'params' in decodedCommand:
+                    cmd = cmd(**decodedCommand['params'])
+                else:
+                    cmd = cmd()
+
+                if cmd.validate():
+                    return (OK, cmd, datetime)
+                else:
+                    print("Command is incompatible with '{}'".format(cmd))
+                    return (CMD_ARGS_INVALID,)
+            else:
+                print('OPSSS, invalid command D:')
+                return (CMD_INVALID,)
         except Exception as e:
             print('Exception caught in decoding data: {}'.format(e))
             return (ERROR_DECODING,)
