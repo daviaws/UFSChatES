@@ -28,6 +28,12 @@ class Server(Observable):
             return True
         return False
 
+    def user_by_uid(self, uid):
+        return self.uidToConnectionUser[uid]['user']
+
+    def connection_by_uid(self, uid):
+        return self.uidToConnectionUser[uid]['connection']
+
     def add_connection(self, uid, connection):
         self.n_connections += 1
         self.uidToConnectionUser[uid] = {'user' : None, 'connection' : connection}
@@ -36,7 +42,7 @@ class Server(Observable):
 
     def remove_connection(self, uid):
         self.n_connections -= 1
-        user = self.uidToConnectionUser[uid]['user']
+        user = self.user_by_uid(uid)
         del self.uidToConnectionUser[uid]
         if user:
             del self.userToUid[user]
@@ -60,7 +66,7 @@ class Server(Observable):
 
     def user_logged(self, uid, user):
         self.uidToConnectionUser[uid]['user'] =  user
-        connection = self.uidToConnectionUser[uid]['connection']
+        connection = self.connection_by_uid(uid)
         self.userToUid[user] = uid
         print("User '{}' logged to connection uid '{}'".format(user, uid))
 
@@ -80,6 +86,7 @@ class Server(Observable):
         return RegisterResult(result=result)
 
     def send_message(self, cmd):
+        args = cmd.get_args()
         toUser = args['to']
         if toUser in self.userToUid:
             responseUID = self.userToUid[toUser]
@@ -114,8 +121,8 @@ class Server(Observable):
         return GetContactsResult(online=sorted(online_list), offline=sorted(offline_list))        
 
     def process_data(self, uid, data):
-        user = self.uidToConnectionUser[uid]['user']
-        connection = self.uidToConnectionUser[uid]['connection']
+        user = self.user_by_uid(uid)
+        connection = self.connection_by_uid(uid)
         if user:
             print("Data received from a logged connection - username: {}".format(user))
             logged = True
@@ -161,7 +168,7 @@ class Server(Observable):
             elif cmd_type == GetContacts:
                 return self.get_contacts(user)
         else:
-            print('Ignoring command {} cause connection is dislogged.'.format())
+            print('Ignoring command {} cause connection is dislogged.'.format(cmd))
 
     def run(self):
         coroutine = self.loop.create_server(lambda: ServerConnection(self), self.ip, self.port)
@@ -191,7 +198,7 @@ class ServerConnection(asyncio.Protocol):
     def generate_uid(self):
         uid = str(int(self.MAX_UID * random()))
         while self.master.uid_exists(uid):
-            uid = MAX_UID * random()
+            uid = self.MAX_UID * random()
         return uid
 
     def connection_made(self, transport):
