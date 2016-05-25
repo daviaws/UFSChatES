@@ -102,7 +102,7 @@ class Server(Observable):
                     result = 1
         return AddContactResult(result=result)
 
-    def get_contacts(self):
+    def get_contacts(self, user):
         contacts = self.userToContacts[user]
         online_list = []
         offline_list = []
@@ -145,21 +145,21 @@ class Server(Observable):
         if cmd_type == Login:
             username = args['username']
             password = args['passwd']
-            return login_user(uid, username, password)
+            return self.login_user(uid, username, password)
         
         if cmd_type == Register:
             username = args['username']
             password = args['passwd']
-            return register_user(username, password)
+            return self.register_user(username, password)
         
         if logged:
             if cmd_type == Message:
-                return send_message(cmd)
+                return self.send_message(cmd)
             elif cmd_type == AddContact:
                 contact = args['username']
-                return add_contact(user, contact)
+                return self.add_contact(user, contact)
             elif cmd_type == GetContacts:
-                return get_contacts()
+                return self.get_contacts(user)
         else:
             print('Ignoring command {} cause connection is dislogged.'.format())
 
