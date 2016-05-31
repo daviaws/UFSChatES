@@ -1,3 +1,7 @@
+from datetime import datetime
+
+from communication.communication_protocol import Message
+
 class MessageManager():
 
 	def __init__(self):
@@ -15,8 +19,10 @@ class MessageManager():
 		else:
 			return None
 
-	def add_pending(self, to, msg, date):
+	def add_pending(self, fromuser, to, msg):
+		date = str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))	
 		self.pending_messages[to] = {'msg' : msg, 'date' : date}
+		return Message(to=to, fromuser=fromuser, date=date, msg=msg)
 
 	def remove_pending(self, to):
 		del self.pending_messages[to]

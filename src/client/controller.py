@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from tkinter import *
 
 import asyncio
@@ -144,15 +142,12 @@ class Controller(Observer):
         arguments = cmd.get_args()
         to = arguments['to']
         msg = arguments['msg']
-        fromuser = self.username
-        date = str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-        cmd.add_args(fromuser=fromuser, date=date)
         if self.msg_man.has_pending_msg(to):
             chat_win = self.win_man.get_window(to)
             if chat_win:
                 chat_win.pending_msg()
         else:
-            self.msg_man.add_pending(to, msg, date)
+            cmd = self.msg_man.add_pending(self.username, to, msg)
             self.client.send_command(cmd)
 
     def send_message_result(self, cmd):
