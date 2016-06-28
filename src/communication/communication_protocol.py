@@ -90,6 +90,16 @@ class AddContactResult(Command):
         super().__init__(**kwargs)
         self.keyargs = {'result'}
 
+class CreateRoom(Command):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.keyargs = {'roomname'}
+
+class CreateRoomResult(Command)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.keyargs = {'result'}
+
 #GUI BIND EVENTS
 class InternalMessage(Command):
     def __init__(self, **kwargs):
@@ -121,7 +131,7 @@ class Protocol():
     'RegisterResult' : RegisterResult, 'Message' : Message, 'MessageResult' : MessageResult,
     'PopupAddContact' : PopupAddContact, 'AddContact' : AddContact, 'AddContactResult' : AddContactResult,
     'InvalidCommand' : InvalidCommand, 'InternalMessage' : InternalMessage, 'GetContacts' : GetContacts,
-    'GetContactsResult' : GetContactsResult
+    'GetContactsResult' : GetContactsResult, 'CreateRoom' : CreateRoom, 'CreateRoomResult' : CreateRoomResult
     }
 
     def encode(self, cmd):
@@ -168,3 +178,4 @@ class Protocol():
         except Exception as e:
             print('Exception caught in decoding data: {}'.format(e))
             return (ERROR_DECODING,)
+            
