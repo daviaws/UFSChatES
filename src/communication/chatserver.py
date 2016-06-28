@@ -2,6 +2,8 @@ import asyncio
 from random import random
 from communication import communication_protocol
 from communication.communication_protocol import *
+from communication import User
+from communication import Rooms
 
 from observers.observable import Observable
 
@@ -22,6 +24,9 @@ class Server(Observable):
         self.registeredUsers = {}
         self.userToContacts = {}
         self.command_protocol = Protocol()
+
+        self.rooms = []
+        self.users = []
 
     def uid_exists(self, uid):
         if uid in self.uidToConnectionUser:
@@ -87,17 +92,21 @@ class Server(Observable):
 
     def send_message(self, cmd):
         args = cmd.get_args()
-        toUser = args['to']
-        if toUser in self.userToUid:
-            responseUID = self.userToUid[toUser]
-            connectionToRespond = self.uidToConnectionUser[responseUID]['connection']
-            encodedCommand = self.command_protocol.encode(cmd)
-            connectionToRespond.send_client(encodedCommand)
-            result = 1
+        destiny = args['to']
+        message = self.command_protocol.encode(cmd)
+        result = 1
+
+        if destiny in self.users:
+            user = users[destiny]
+            user.receive_message(message)
+        elif destiny in self.rooms:
+            room = rooms[destiny]
+            room.broadcast_message(message)
         else:
             result = 0
-        return MessageResult(result=result, to=toUser)
 
+        return MessageResult(result=result, to=toUser)
+        
     def add_contact(self, user, contact):
         result = -2
         if contact in self.registeredUsers:
@@ -119,6 +128,15 @@ class Server(Observable):
             else:
                 offline_list.append(item)
         return GetContactsResult(online=sorted(online_list), offline=sorted(offline_list))        
+
+    def create_rooms(self, admin_name, room_name):
+        if room_name in self.rooms:
+            result = 0
+        else:
+            room = Room(admin_name, room_name)
+            rooms[room_name] = room
+            result = 1
+        return CreateRoomResult(result=result)        
 
     def process_data(self, uid, data):
         user = self.user_by_uid(uid)
@@ -167,6 +185,10 @@ class Server(Observable):
                 return self.add_contact(user, contact)
             elif cmd_type == GetContacts:
                 return self.get_contacts(user)
+            elif cmd_type == CreateRoom:
+                admin_name = user
+                room_name = args['roomname']
+                return self.create_room(admin_name, room_name)
         else:
             print('Ignoring command {} cause connection is dislogged.'.format(cmd))
 
