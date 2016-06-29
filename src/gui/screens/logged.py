@@ -16,21 +16,39 @@ class LoggedScreen():
         login = Button(loggedFrame, text='Add contact', command= lambda: self.master.update(PopupAddContact()))
         login.pack()
 
-        onlineFrame = Frame(loggedFrame, bd=1, relief=SUNKEN)
+        contactFrame = Frame(loggedFrame, bd=1, relief=SUNKEN)
+        contactFrame.pack(expand=True, fill=BOTH, side=RIGHT)
+        
+        onlineFrame = Frame(contactFrame, bd=1, relief=SUNKEN)
         onlineFrame.pack(expand=True, fill=BOTH)
         onlineFriendsLabel = Label(onlineFrame, text="Online Friends")
         onlineFriendsLabel.pack()
         self.onlineFriends = FriendList(master, onlineFrame)
         self.onlineFriends.able_chat()
         
-        offlineFrame = Frame(loggedFrame, bd=1, relief=SUNKEN)
+        offlineFrame = Frame(contactFrame, bd=1, relief=SUNKEN)
         offlineFrame.pack(expand=True, fill=BOTH)
         offlineFriendsLabel = Label(offlineFrame, text="Offline Friends")
         offlineFriendsLabel.pack()
         self.offlineFriends = FriendList(master, offlineFrame)
 
-        logout = Button(loggedFrame, text='Logout', command= lambda: print('logout'))
-        logout.pack()
+        roomFrame = Frame(loggedFrame, bd=1, relief=SUNKEN)
+        roomFrame.pack(expand=True, fill=BOTH, side=LEFT)
+        
+        inFrame = Frame(roomFrame, bd=1, relief=SUNKEN)
+        inFrame.pack(expand=True, fill=BOTH)
+        inRoomsLabel = Label(inFrame, text="Your rooms")
+        inRoomsLabel.pack()
+        self.yourRooms = FriendList(master, inFrame)
+        
+        outFrame = Frame(roomFrame, bd=1, relief=SUNKEN)
+        outFrame.pack(expand=True, fill=BOTH)
+        outRoomsLabel = Label(outFrame, text="Public rooms")
+        outRoomsLabel.pack()
+        self.publicRooms = FriendList(master, outFrame)
+
+        logout = Button(root, text='Logout', command= lambda: print('logout'))
+        logout.pack(side=BOTTOM)
 
     def reload_lists(self, online, offline):
         self.onlineFriends.reload(online)
