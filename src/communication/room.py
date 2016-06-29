@@ -6,17 +6,20 @@ class Room():
 
 	def get_usernames(self):
 		usernames = []
-		for user in users:
+		for user in self.users:
 			usernames.append(user.name)
 		return usernames
 
 	def add_user(self, user):
 		self.users.append(user)
 
+	def remove_user(self, user):
+		self.users.remove(user)
+
 	def broadcast_message(self, message):
-		for user in users:
+		for user in self.users:
 			if user.logged():
-				connection.receive_message(message)
+				user.connection.receive_message(message)
 
 	def change_admin(self, new_admin):
-		admin = new_admin.name
+		self.admin = new_admin.name

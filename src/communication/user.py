@@ -34,11 +34,11 @@ class User():
 	def get_contacts(self):
 		return self.contacts
 
-	def enter_room(self, room):
+	def join_room(self, room):
 		self.rooms.append(room)
 
 	def exit_room(self, room):
 		self.rooms.remove(room)
 
 	def get_rooms(self):
-		return rooms
+		return self.rooms
