@@ -1,4 +1,4 @@
-class Room(Object): 
+class Room(): 
 	def __init__(self, admin_name, room_name):
 		self.name = room_name
 		self.users = []

@@ -95,7 +95,7 @@ class CreateRoom(Command):
         super().__init__(**kwargs)
         self.keyargs = {'roomname'}
 
-class CreateRoomResult(Command)
+class CreateRoomResult(Command):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.keyargs = {'result'}

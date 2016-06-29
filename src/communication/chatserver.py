@@ -2,8 +2,8 @@ import asyncio
 from random import random
 from communication import communication_protocol
 from communication.communication_protocol import *
-from communication import User
-from communication import Rooms
+from communication.user import User
+from communication.room import Room
 
 from observers.observable import Observable
 
@@ -15,78 +15,66 @@ class Server(Observable):
         self.loop = asyncio.get_event_loop()
         self.server = None
         
+        self.rooms = {}
+        self.users = {}
+        
         self.n_connections = 0
-        #uid to connection/user dict
-        self.uidToConnectionUser = {}
-        ##user to connection/uid dict
-        self.userToUid = {}
-        ##registered users
-        self.registeredUsers = {}
-        self.userToContacts = {}
+        self.uidToUser = {}
+        
         self.command_protocol = Protocol()
 
-        self.rooms = []
-        self.users = []
-
     def uid_exists(self, uid):
-        if uid in self.uidToConnectionUser:
+        if uid in self.uidToUser:
             return True
         return False
 
     def user_by_uid(self, uid):
-        return self.uidToConnectionUser[uid]['user']
+        if uid in self.uidToUser:
+            return self.uidToUser[uid]
+        return None
 
-    def connection_by_uid(self, uid):
-        return self.uidToConnectionUser[uid]['connection']
-
-    def add_connection(self, uid, connection):
+    def add_connection(self):
         self.n_connections += 1
-        self.uidToConnectionUser[uid] = {'user' : None, 'connection' : connection}
-        print("New connection with uid '{}'".format(uid))
         print("Number of connections is '{}'".format(self.n_connections))
 
     def remove_connection(self, uid):
-        self.n_connections -= 1
         user = self.user_by_uid(uid)
-        del self.uidToConnectionUser[uid]
         if user:
-            del self.userToUid[user]
-        print("Connection from uid '{}' was removed".format(uid))
+            self.user_dislogged(user)
+        self.n_connections -= 1
         print("Number of connections is '{}'".format(self.n_connections))
 
-    def login_user(self, uid, username, password):
-        if not username in self.userToUid:
-            if username in self.registeredUsers:
-                userpass = self.registeredUsers[username]
-                if password == userpass:
-                    self.user_logged(uid, username)
+    def login_user(self, uid, connection, username, password):
+        if username in self.users:
+            user = self.users[username]
+            if not user.logged():
+                if user.password_matchs(password):
+                    self.user_logged(uid, connection, user)
                     result = 1
                 else:
                     result = 0
             else:
-                result = -1
+                result = 2
         else:
-            result = 2
+            result = -1
         return LoginResult(result=result)
 
-    def user_logged(self, uid, user):
-        self.uidToConnectionUser[uid]['user'] =  user
-        connection = self.connection_by_uid(uid)
-        self.userToUid[user] = uid
-        print("User '{}' logged to connection uid '{}'".format(user, uid))
+    def user_logged(self, uid, connection, user):
+        self.uidToUser[uid] =  user
+        user.login(uid, connection)
+        print("User '{}' logged to connection uid '{}'".format(user.name, uid))
 
     def user_dislogged(self, user):
-        uid = self.userToUid[user]
-        del self.userToUid[user]
-        self.uidToConnectionUser[uid]['user'] =  None
-        print("User '{}' dislogged from connection uid '{}'".format(user, uid))
+        uid = user.uid
+        user.logout()
+        del self.uidToUser[uid]
+        print("User '{}' dislogged from connection uid '{}'".format(user.name, uid))
 
     def register_user(self, username, password):
-        if username in self.registeredUsers:
+        if username in self.users:
             result = 0
         else:
-            self.registeredUsers[username] = password
-            self.userToContacts[username] = []
+            self.users[username] = User(username, password)
             result = 1
         return RegisterResult(result=result)
 
@@ -97,50 +85,52 @@ class Server(Observable):
         result = 1
 
         if destiny in self.users:
-            user = users[destiny]
+            user = self.users[destiny]
             user.receive_message(message)
-        elif destiny in self.rooms:
-            room = rooms[destiny]
-            room.broadcast_message(message)
+        # elif destiny in self.rooms:
+        #     room = self.rooms[destiny]
+        #     room.broadcast_message(message)
         else:
             result = 0
 
-        return MessageResult(result=result, to=toUser)
+        return MessageResult(result=result, to=destiny)
         
     def add_contact(self, user, contact):
         result = -2
-        if contact in self.registeredUsers:
+        if contact in self.users:
             result = -1
-            if contact != user:
+            if contact != user.name:
                 result = 0
-                if not contact in self.userToContacts[user]:
-                    self.userToContacts[user].append(contact)
+                if not contact in user.get_contacts():
+                    user.add_contact(contact)
                     result = 1
         return AddContactResult(result=result)
 
     def get_contacts(self, user):
-        contacts = self.userToContacts[user]
+        contacts = user.get_contacts()
         online_list = []
         offline_list = []
         for item in contacts:
-            if item in self.userToUid:
-                online_list.append(item)
+            if item in self.users:
+                if self.users[item].logged():
+                    online_list.append(item)
+                else:
+                    offline_list.append(item)
             else:
-                offline_list.append(item)
+                raise Exception('Not Implemented #User dont exist anymore#')
         return GetContactsResult(online=sorted(online_list), offline=sorted(offline_list))        
 
-    def create_rooms(self, admin_name, room_name):
-        if room_name in self.rooms:
-            result = 0
-        else:
-            room = Room(admin_name, room_name)
-            rooms[room_name] = room
-            result = 1
-        return CreateRoomResult(result=result)        
+    # def create_rooms(self, admin_name, room_name):
+    #     if room_name in self.rooms:
+    #         result = 0
+    #     else:
+    #         room = Room(admin_name, room_name)
+    #         rooms[room_name] = room
+    #         result = 1
+    #     return CreateRoomResult(result=result)        
 
-    def process_data(self, uid, data):
+    def process_data(self, uid, connection, data):
         user = self.user_by_uid(uid)
-        connection = self.connection_by_uid(uid)
         if user:
             print("Data received from a logged connection - username: {}".format(user))
             logged = True
@@ -149,13 +139,13 @@ class Server(Observable):
             logged = False
         messageTuple = self.command_protocol.decode(data)
         print("RESULT OF PROCESS '{}'".format(messageTuple))
-        response = self.exec_command(messageTuple, uid, user, logged)
+        response = self.exec_command(messageTuple, uid, connection, user, logged)
         if response:
             print(response)
             response = self.command_protocol.encode(response)
             connection.send_client(response)
 
-    def exec_command(self, messageTuple, uid, user, logged): 
+    def exec_command(self, messageTuple, uid, connection, user, logged): 
         result = messageTuple[0]                             
         if result != communication_protocol.OK:
             print('Command is not valid. Code: {}'.format(result))
@@ -170,7 +160,7 @@ class Server(Observable):
         if cmd_type == Login:
             username = args['username']
             password = args['passwd']
-            return self.login_user(uid, username, password)
+            return self.login_user(uid, connection, username, password)
         
         if cmd_type == Register:
             username = args['username']
@@ -185,10 +175,10 @@ class Server(Observable):
                 return self.add_contact(user, contact)
             elif cmd_type == GetContacts:
                 return self.get_contacts(user)
-            elif cmd_type == CreateRoom:
-                admin_name = user
-                room_name = args['roomname']
-                return self.create_room(admin_name, room_name)
+            # elif cmd_type == CreateRoom:
+            #     admin_name = user
+            #     room_name = args['roomname']
+            #     return self.create_room(admin_name, room_name)
         else:
             print('Ignoring command {} cause connection is dislogged.'.format(cmd))
 
@@ -224,7 +214,7 @@ class ServerConnection(asyncio.Protocol):
         return uid
 
     def connection_made(self, transport):
-        self.master.add_connection(self.uid, self)
+        self.master.add_connection()
         peername = transport.get_extra_info('peername')
         print('Connection from {}'.format(peername))
         self.transport = transport
@@ -235,7 +225,7 @@ class ServerConnection(asyncio.Protocol):
 
     def data_received(self, data):
         print("Received data from connection with uid '{}'".format(self.uid))
-        self.master.process_data(self.uid, data)
+        self.master.process_data(self.uid, self, data)
 
     def send_client(self, msg):
         print("Sending data to connection with uid '{}'".format(self.uid))
