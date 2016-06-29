@@ -13,8 +13,11 @@ class LoggedScreen():
         loggedFrame = Frame(self.mainFrame, bd=1, relief=SUNKEN)
         loggedFrame.pack(expand=True, fill=BOTH)
 
-        login = Button(loggedFrame, text='Add contact', command= lambda: self.master.update(PopupAddContact()))
-        login.pack()
+        addContact = Button(loggedFrame, text='Add contact', command= lambda: self.master.update(PopupAddContact()))
+        addContact.pack(anchor=N)
+
+        createRoom = Button(loggedFrame, text='Create room', command= lambda: self.master.update(PopupAddContact()))
+        createRoom.pack(anchor=S)
 
         contactFrame = Frame(loggedFrame, bd=1, relief=SUNKEN)
         contactFrame.pack(expand=True, fill=BOTH, side=RIGHT)
