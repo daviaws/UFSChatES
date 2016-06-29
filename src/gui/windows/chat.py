@@ -44,8 +44,8 @@ class ChatWindow():
         self.logText.log('%s - %s: %s' % (date, user, self.msgText.get_text()))
         self.msgText.clean()
 
-    def msg_received(self, date, msg):
-        self.logText.log('%s - %s: %s' % (date, self.chating_with, msg))
+    def msg_received(self, fromuser, date, msg):
+        self.logText.log('%s - %s: %s' % (date, fromuser, msg))
 
     def pending_msg(self):
         messagebox.showwarning('Cannot send message', 'Message pendig to %s.' % self.chating_with, parent=self.root)

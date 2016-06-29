@@ -1,9 +1,9 @@
 from tkinter import *
 
-from communication.communication_protocol import OpenChat
+from communication.communication_protocol import OpenChat, JoinRoom, LeaveRoom
 #from observers.gui_events import event_open_chat_window
 
-class FriendList():
+class RoomList():
 
     def __init__(self, master, root):
         self.master = master
@@ -21,15 +21,15 @@ class FriendList():
     def able_chat(self):
         self.chat = True
 
-    def reload(self, friend_list):
+    def reload(self, room_list):
         self.listbox.delete(0, END)
-        for item in friend_list:
+        for item in room_list:
             self.listbox.insert(END, item)
 
     def ondoubleclick(self, event):
         if self.selection:
             if self.chat:
-                self.chat_contact(self.selection)
+                self.chat_room(self.selection)
 
     def onselect(self, event):
         self.destroy_menu()
@@ -56,20 +56,27 @@ class FriendList():
             self.destroy_menu()
             self.menu = Menu(self.listbox, tearoff=0)
             if self.chat:
-                self.menu.add_command(label="Chat with '%s'" % (item), command= lambda: self.chat_contact(item))
-            self.menu.add_command(label="Remove '%s'" % (item), command= lambda: self.remove_contact(item))
+                self.menu.add_command(label="Chat with '%s'" % (item), command= lambda: self.chat_room(item))
+                self.menu.add_command(label="Exit room '%s'" % (item), command= lambda: self.exit_room(item))
+            else:
+                self.menu.add_command(label="Enter room '%s'" % (item), command= lambda: self.enter_room(item))
             self.menu.add_separator()
             self.menu.add_command(label="Exit menu", command=self.destroy_menu)
             self.menu.post(event.x_root, event.y_root)
         except:
             pass
 
-    def chat_contact(self, contact):
-        cmd = OpenChat(username=contact)
+    def chat_room(self, room):
+        cmd = OpenChat(username=room)
         self.master.update(cmd)
 
-    def remove_contact(self, contact):
-        print ("Remove '%s'" % (contact))
+    def enter_room(self, room):
+        cmd = JoinRoom(roomname=room)
+        self.master.update(cmd)
+
+    def exit_room(self, room):
+        cmd = LeaveRoom(roomname=room)
+        self.master.update(cmd)        
 
     def destroy_menu(self):
         if self.menu:

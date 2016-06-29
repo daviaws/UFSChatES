@@ -1,7 +1,8 @@
 from tkinter import *
 
-from communication.communication_protocol import PopupAddContact
+from communication.communication_protocol import PopupAddContact, PopupCreateRoom
 from gui.widgets.friend_list import FriendList
+from gui.widgets.room_list import RoomList
 
 class LoggedScreen():
 
@@ -16,8 +17,11 @@ class LoggedScreen():
         addContact = Button(loggedFrame, text='Add contact', command= lambda: self.master.update(PopupAddContact()))
         addContact.pack(anchor=N)
 
-        createRoom = Button(loggedFrame, text='Create room', command= lambda: self.master.update(PopupAddContact()))
+        createRoom = Button(loggedFrame, text='Create room', command= lambda: self.master.update(PopupCreateRoom()))
         createRoom.pack(anchor=S)
+
+        logout = Button(loggedFrame, text='Logout', command= lambda: print('logout'))
+        logout.pack(side=BOTTOM)
 
         contactFrame = Frame(loggedFrame, bd=1, relief=SUNKEN)
         contactFrame.pack(expand=True, fill=BOTH, side=RIGHT)
@@ -42,20 +46,20 @@ class LoggedScreen():
         inFrame.pack(expand=True, fill=BOTH)
         inRoomsLabel = Label(inFrame, text="Your rooms")
         inRoomsLabel.pack()
-        self.yourRooms = FriendList(master, inFrame)
+        self.yourRooms = RoomList(master, inFrame)
+        self.yourRooms.able_chat()
         
         outFrame = Frame(roomFrame, bd=1, relief=SUNKEN)
         outFrame.pack(expand=True, fill=BOTH)
         outRoomsLabel = Label(outFrame, text="Public rooms")
         outRoomsLabel.pack()
-        self.publicRooms = FriendList(master, outFrame)
+        self.publicRooms = RoomList(master, outFrame)
 
-        logout = Button(root, text='Logout', command= lambda: print('logout'))
-        logout.pack(side=BOTTOM)
-
-    def reload_lists(self, online, offline):
-        self.onlineFriends.reload(online)
-        self.offlineFriends.reload(offline)
+    def reload_lists(self, online_contacts, offline_contacts, your_rooms, public_rooms):
+        self.onlineFriends.reload(online_contacts)
+        self.offlineFriends.reload(offline_contacts)
+        self.yourRooms.reload(your_rooms)
+        self.publicRooms.reload(public_rooms)
 
     def raises(self):
         self.mainFrame.pack(expand=True, fill=BOTH)

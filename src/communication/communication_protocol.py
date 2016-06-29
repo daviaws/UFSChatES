@@ -65,7 +65,7 @@ class LoginResult(Command):
 class Message(Command):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.keyargs = {'to', 'fromuser', 'date', 'msg'}
+        self.keyargs = {'to', 'fromuser', 'window', 'date', 'msg'}
 
 class MessageResult(Command):
     def __init__(self, **kwargs):
@@ -140,6 +140,11 @@ class PopupAddContact(Command):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
+
+class PopupCreateRoom(Command):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
 class OpenChat(Command):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -159,7 +164,7 @@ class Protocol():
     REF_DICT = {
     'Login' : Login, 'LoginResult' : LoginResult, 'Register' : Register,
     'RegisterResult' : RegisterResult, 'Message' : Message, 'MessageResult' : MessageResult,
-    'PopupAddContact' : PopupAddContact, 'AddContact' : AddContact, 'AddContactResult' : AddContactResult,
+    'PopupAddContact' : PopupAddContact, 'PopupCreateRoom' : PopupCreateRoom, 'AddContact' : AddContact, 'AddContactResult' : AddContactResult,
     'RemoveContact' : RemoveContact,  'RemoveContactResult' : RemoveContactResult, 'InvalidCommand' : InvalidCommand, 
     'InternalMessage' : InternalMessage, 'GetContacts' : GetContacts, 'GetContactsResult' : GetContactsResult, 
     'CreateRoom' : CreateRoom, 'CreateRoomResult' : CreateRoomResult, 'JoinRoom' : JoinRoom, 

@@ -22,7 +22,7 @@ class MessageManager():
 	def add_pending(self, fromuser, to, msg):
 		date = str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))	
 		self.pending_messages[to] = {'msg' : msg, 'date' : date}
-		return Message(to=to, fromuser=fromuser, date=date, msg=msg)
+		return Message(to=to, fromuser=fromuser, window=fromuser, date=date, msg=msg)
 
 	def remove_pending(self, to):
 		del self.pending_messages[to]

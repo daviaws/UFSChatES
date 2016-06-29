@@ -45,6 +45,7 @@ class Controller(Observer):
         self.mainWindow = main.MainWindow(app_name)
         root = self.mainWindow.get_root()
         self.addContactWindow = add_contact.AddContactWindow(self)
+        self.createRoomWindow = create_room.CreateRoomWindow(self)
 
         self.loginScreen = login.LoginScreen(self, root)
         self.loginScreen.raises()
@@ -74,11 +75,26 @@ class Controller(Observer):
         elif event == PopupAddContact:
             self.popup_add_contact(cmd)
         
+        elif event == PopupCreateRoom:
+            self.popup_create_window(cmd)
+
         elif event == AddContact:
             self.on_pressed_add_contact(cmd)
         
+        elif event == CreateRoom:
+            self.on_pressed_create_room(cmd)
+
         elif event == AddContactResult:
             self.add_contact_result(cmd)
+
+        elif event == CreateRoomResult:
+            self.create_room_result(cmd)
+
+        elif event == JoinRoom:
+            self.on_join_room(cmd)
+
+        elif event == LeaveRoom:
+            self.on_leave_room(cmd)
 
         elif event == OpenChat:
             self.on_open_chat_window(cmd)
@@ -88,8 +104,7 @@ class Controller(Observer):
         
         elif event == Message:
             arguments = cmd.get_args()
-            to = arguments['to']
-            if self.username == to:
+            if 'fromuser' in arguments:
                 self.received_message(cmd)
             else:
                 self.send_message(cmd)
@@ -124,9 +139,24 @@ class Controller(Observer):
     def popup_add_contact(self, cmd):
         self.addContactWindow.raises()
 
+    def popup_create_window(self, cmd):
+        self.createRoomWindow.raises()
+
     def on_pressed_add_contact(self, cmd):
         arguments = cmd.get_args()
         self.client.send_command(cmd)
+
+    def on_pressed_create_room(self, cmd):
+        arguments = cmd.get_args()
+        self.client.send_command(cmd)
+
+    def on_join_room(self, cmd):
+        arguments = cmd.get_args()
+        self.client.send_command(cmd)  
+
+    def on_leave_room(self, cmd):
+        arguments = cmd.get_args()
+        self.client.send_command(cmd)  
 
     def on_open_chat_window(self, cmd):
         arguments = cmd.get_args()
@@ -192,23 +222,28 @@ class Controller(Observer):
             self.loginScreen.log('Register: Success')
         elif result == 0:
             self.loginScreen.log('Register: User already exists')
+        elif result == -1:
+            self.loginScreen.log('Register: There is a room with this name')
 
     def received_message(self, cmd):
         arguments = cmd.get_args()
         fromuser = arguments['fromuser']
         to = arguments['to']
+        window = arguments['window']
         date = arguments['date']
         msg = arguments['msg']
         #TODO - LOGAR EM ARQUIVO
-        self.win_man.open(self, fromuser)
-        chat_win = self.win_man.get_window(fromuser)
-        chat_win.msg_received(date, msg)
+        self.win_man.open(self, window)
+        chat_win = self.win_man.get_window(window)
+        chat_win.msg_received(fromuser, date, msg)
 
     def received_contacts_lists(self, cmd):
         arguments = cmd.get_args()
-        online_list = arguments['online']
-        offline_list = arguments['offline']
-        self.loggedScreen.reload_lists(online_list, offline_list)
+        online_contacts = arguments['online_contacts']
+        offline_contacts = arguments['offline_contacts']
+        your_rooms = arguments['your_rooms']
+        public_rooms = arguments['public_rooms']
+        self.loggedScreen.reload_lists(online_contacts, offline_contacts, your_rooms, public_rooms)
 
     def add_contact_result(self, cmd):
         arguments = cmd.get_args()
@@ -221,6 +256,16 @@ class Controller(Observer):
             self.addContactWindow.added_self()
         elif result == -2:
             self.addContactWindow.dont_exist()
+
+    def create_room_result(self, cmd):
+        arguments = cmd.get_args()
+        result = arguments['result']
+        if result == 1:
+            self.createRoomWindow.clear()
+        elif result == 0:
+            self.createRoomWindow.already_exist()
+        elif result == -1:
+            self.createRoomWindow.usenarme_exist()
 
     @asyncio.coroutine
     def run_tk(self, root, interval=0.05):

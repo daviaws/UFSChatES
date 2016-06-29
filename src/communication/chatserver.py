@@ -71,7 +71,9 @@ class Server(Observable):
         print("User '{}' dislogged from connection uid '{}'".format(user.name, uid))
 
     def register_user(self, username, password):
-        if username in self.users:
+        if username in self.rooms:
+            result = -1
+        elif username in self.users:
             result = 0
         else:
             self.users[username] = User(username, password)
@@ -80,16 +82,19 @@ class Server(Observable):
 
     def send_message(self, cmd):
         args = cmd.get_args()
+        fromuser = args['fromuser']
         destiny = args['to']
-        message = self.command_protocol.encode(cmd)
         result = 1
 
         if destiny in self.users:
+            message = self.command_protocol.encode(cmd)
             user = self.users[destiny]
             user.receive_message(message)
         elif destiny in self.rooms:
-             room = self.rooms[destiny]
-             room.broadcast_message(message)
+            cmd.add_args(window=destiny)
+            message = self.command_protocol.encode(cmd)
+            room = self.rooms[destiny]
+            room.broadcast_message(fromuser, message)
         else:
             result = 0
 
@@ -116,8 +121,11 @@ class Server(Observable):
 
     def get_contacts(self, user):
         contacts = user.get_contacts()
+        user_rooms = user.get_rooms()
         online_list = []
         offline_list = []
+        your_rooms = []
+        public_rooms = []
         for item in contacts:
             if item in self.users:
                 if self.users[item].logged():
@@ -126,10 +134,20 @@ class Server(Observable):
                     offline_list.append(item)
             else:
                 raise Exception('Not Implemented #User dont exist anymore#')
-        return GetContactsResult(online=sorted(online_list), offline=sorted(offline_list))        
+        for room in self.rooms:
+            if room in user_rooms:
+                your_rooms.append(room)
+            else:
+                public_rooms.append(room)
+        return GetContactsResult( online_contacts=sorted(online_list), \
+                                  offline_contacts=sorted(offline_list), \
+                                  your_rooms=sorted(your_rooms), \
+                                  public_rooms=sorted(public_rooms) )        
 
     def create_room(self, admin_name, room_name):
-        if room_name in self.rooms:
+        if room_name in self.users:
+            result = -1
+        elif room_name in self.rooms:
             result = 0
         else:
             room = Room(admin_name, room_name)
@@ -162,7 +180,7 @@ class Server(Observable):
     def process_data(self, uid, connection, data):
         user = self.user_by_uid(uid)
         if user:
-            print("Data received from a logged connection - username: {}".format(user))
+            print("Data received from a logged connection - username: {}".format(user.name))
             logged = True
         else:
             print("Data received from a dislogged connection")
