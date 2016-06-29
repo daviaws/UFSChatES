@@ -87,9 +87,9 @@ class Server(Observable):
         if destiny in self.users:
             user = self.users[destiny]
             user.receive_message(message)
-        # elif destiny in self.rooms:
-        #     room = self.rooms[destiny]
-        #     room.broadcast_message(message)
+        elif destiny in self.rooms:
+             room = self.rooms[destiny]
+             room.broadcast_message(message)
         else:
             result = 0
 
@@ -106,6 +106,14 @@ class Server(Observable):
                     result = 1
         return AddContactResult(result=result)
 
+    def remove_contact(self, user, contact):
+        result = 0
+        if contact in user.get_contacts():
+            user.remove_contact(contact)
+            result = 1
+
+        return RemoveContactResult(result=result)
+
     def get_contacts(self, user):
         contacts = user.get_contacts()
         online_list = []
@@ -120,14 +128,36 @@ class Server(Observable):
                 raise Exception('Not Implemented #User dont exist anymore#')
         return GetContactsResult(online=sorted(online_list), offline=sorted(offline_list))        
 
-    # def create_rooms(self, admin_name, room_name):
-    #     if room_name in self.rooms:
-    #         result = 0
-    #     else:
-    #         room = Room(admin_name, room_name)
-    #         rooms[room_name] = room
-    #         result = 1
-    #     return CreateRoomResult(result=result)        
+    def create_room(self, admin_name, room_name):
+        if room_name in self.rooms:
+            result = 0
+        else:
+            room = Room(admin_name, room_name)
+            self.rooms[room_name] = room
+            result = 1
+        return CreateRoomResult(result=result)        
+
+    def join_room(self, user, room_name):
+        if room_name in self.rooms:
+            user.join_room(room_name)
+            room = self.rooms[room_name]
+            room.add_user(user)
+            result = 1
+        else:
+            result = 0
+        
+        return JoinRoomResult(result=result)
+
+    def leave_room(self, user, room_name):
+        if room_name in user.get_rooms():
+            room = self.rooms[room_name]
+            room.remove_user(user)
+            user.exit_room(room_name)
+            result = 1
+        else:
+            result = 0
+
+        return LeaveRoomResult(result=result)
 
     def process_data(self, uid, connection, data):
         user = self.user_by_uid(uid)
@@ -173,12 +203,22 @@ class Server(Observable):
             elif cmd_type == AddContact:
                 contact = args['username']
                 return self.add_contact(user, contact)
+            elif cmd_type == RemoveContact:
+                contact = args['username']
+                return self.remove_contact(user, contact)
             elif cmd_type == GetContacts:
                 return self.get_contacts(user)
-            # elif cmd_type == CreateRoom:
-            #     admin_name = user
-            #     room_name = args['roomname']
-            #     return self.create_room(admin_name, room_name)
+            elif cmd_type == CreateRoom:
+                admin_name = user.name
+                room_name = args['roomname']
+                return self.create_room(admin_name, room_name)
+            elif cmd_type == JoinRoom:
+                room_name = args['roomname']
+                return self.join_room(user, room_name)
+            elif cmd_type == LeaveRoom:
+                room_name = args['roomname']
+                return self.leave_room(user, room_name)
+
         else:
             print('Ignoring command {} cause connection is dislogged.'.format(cmd))
 

@@ -90,12 +90,42 @@ class AddContactResult(Command):
         super().__init__(**kwargs)
         self.keyargs = {'result'}
 
+class RemoveContact(Command):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)        
+        self.keyargs = {'username'}
+
+class RemoveContactResult(Command):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.keyargs = {'result'}
+
 class CreateRoom(Command):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.keyargs = {'roomname'}
 
 class CreateRoomResult(Command):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.keyargs = {'result'}
+
+class JoinRoom(Command):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.keyargs = {'roomname'}
+
+class JoinRoomResult(Command):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.keyargs = {'result'}
+
+class LeaveRoom(Command):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.keyargs = {'roomname'}
+
+class LeaveRoomResult(Command):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.keyargs = {'result'}
@@ -130,8 +160,10 @@ class Protocol():
     'Login' : Login, 'LoginResult' : LoginResult, 'Register' : Register,
     'RegisterResult' : RegisterResult, 'Message' : Message, 'MessageResult' : MessageResult,
     'PopupAddContact' : PopupAddContact, 'AddContact' : AddContact, 'AddContactResult' : AddContactResult,
-    'InvalidCommand' : InvalidCommand, 'InternalMessage' : InternalMessage, 'GetContacts' : GetContacts,
-    'GetContactsResult' : GetContactsResult, 'CreateRoom' : CreateRoom, 'CreateRoomResult' : CreateRoomResult
+    'RemoveContact' : RemoveContact,  'RemoveContactResult' : RemoveContactResult, 'InvalidCommand' : InvalidCommand, 
+    'InternalMessage' : InternalMessage, 'GetContacts' : GetContacts, 'GetContactsResult' : GetContactsResult, 
+    'CreateRoom' : CreateRoom, 'CreateRoomResult' : CreateRoomResult, 'JoinRoom' : JoinRoom, 
+    'JoinRoomResult' : JoinRoomResult, 'LeaveRoom' : LeaveRoom, 'LeaveRoomResult' : LeaveRoomResult
     }
 
     def encode(self, cmd):
